@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outlook Bulk Email Marketing Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; padding: 20px; }
+    .container { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+    .full-width { grid-column: 1 / -1; }
+    h2 { font-size: 18px; margin-bottom: 15px; color: #38bdf8; border-bottom: 1px solid #334155; padding-bottom: 8px; }
+    label { display: block; margin: 10px 0 5px; font-size: 13px; color: #94a3b8; }
+    textarea, input { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 6px; font-size: 13px; }
+    textarea { resize: vertical; height: 100px; }
+    button { padding: 10px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+    .btn-add { background: #3b82f6; color: white; width: 100%; }
+    .btn-start { background: #10b981; color: white; width: 100%; font-size: 16px; padding: 12px; }
+    .btn-stop { background: #ef4444; color: white; width: 100%; font-size: 16px; padding: 12px; margin-top: 5px; display: none; }
+    button:hover { opacity: 0.9; }
+    .stats { display: flex; gap: 15px; margin-top: 15px; }
+    .stat-box { flex: 1; background: #0f172a; padding: 15px; border-radius: 6px; text-align: center; border: 1px solid #334155; }
+    .stat-box h3 { font-size: 22px; margin-top: 5px; }
+    .success { color: #34d399; }
+    .failed { color: #f87171; }
+    .pending { color: #fbbf24; }
+    #logBox { height: 200px; overflow-y: auto; background: #090d16; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 12px; }
+    .log-entry { margin-bottom: 4px; padding: 2px 4px; border-radius: 3px; }
+    .log-success { color: #4ade80; }
+    .log-error { color: #f87171; }
+    .log-info { color: #60a5fa; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid #334155; word-break: break-all; }
+    th { background: #0f172a; color: #94a3b8; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- ১. ইমেইল অ্যাকাউন্ট সেকশন -->
+    <div class="card full-width">
+      <h2>অ্যাড ইমেইল অ্যাকাউন্ট (email|password|refresh_token|client_id)</h2>
+      <textarea id="accountInput" placeholder="AricGlikman0675887@outlook.com|akjxhf15358|M.C559...|9e5f94bc..."></textarea>
+      <button class="btn-add" onclick="addAccounts()">ইমেইল সেভ করুন</button>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Email</th>
+            <th>Client ID</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="accountTable">
+          <tr><td colspan="4" style="text-align:center; color:#64748b;">কোনো অ্যাকাউন্ট যুক্ত করা হয়নি</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ২. প্রাপক ও মেসেজ সেটআপ -->
+    <div class="card">
+      <h2>মার্কেটিং কনফিগারেশন</h2>
+      
+      <label>প্রাপক ইমেইল লিস্ট (এক লাইনে একটি):</label>
+      <textarea id="recipientList" placeholder="target1@gmail.com&#10;target2@yahoo.com&#10;target3@outlook.com"></textarea>
+
+      <label>প্রতি ইমেইল পাঠানোর বিরতি (সেকেন্ড):</label>
+      <input type="number" id="delayInput" value="10" min="1">
+
+      <label>ইমেইল সাবজেক্ট (Subject):</label>
+      <input type="text" id="emailSubject" placeholder="বিশেষ অফার আপনার জন্য!">
+    </div>
+
+    <!-- ৩. ইমেইল বডি ও কন্ট্রোল -->
+    <div class="card">
+      <h2>মেসেজ বডি & কন্ট্রোল</h2>
+      
+      <label>ইমেইল বডি (HTML সাপোর্ট করবে):</label>
+      <textarea id="emailBody" style="height: 110px;" placeholder="<h1>হ্যালো!</h1><p>আপনার অফারের বিবরণ এখানে লিখুন...</p>"></textarea>
+
+      <button id="startBtn" class="btn-start" onclick="startMarketing()">🚀 স্টার্ট মার্কেটিং</button>
+      <button id="stopBtn" class="btn-stop" onclick="stopMarketing()">⏹️ স্টপ</button>
+    </div>
+
+    <!-- ৪. রিপোর্ট ও লাইভ লগ -->
+    <div class="card full-width">
+      <h2>লাইভ রিপোর্ট ও লগ</h2>
+      
+      <div class="stats">
+        <div class="stat-box"><span style="font-size: 12px; color: #94a3b8;">মোট টার্গেট</span><h3 id="totalCount" class="pending">0</h3></div>
+        <div class="stat-box"><span style="font-size: 12px; color: #94a3b8;">সফল (Sent)</span><h3 id="sentCount" class="success">0</h3></div>
+        <div class="stat-box"><span style="font-size: 12px; color: #94a3b8;">ব্যর্থ (Failed)</span><h3 id="failedCount" class="failed">0</h3></div>
+      </div>
+
+      <label style="margin-top: 15px;">অ্যাক্টিভিটি লগ:</label>
+      <div id="logBox"></div>
+    </div>
+
+  </div>
+
+  <script>
+    let accounts = [];
+    let isRunning = false;
+    let sentCount = 0;
+    let failedCount = 0;
+
+    // ১. অ্যাকাউন্ট যুক্ত করার ফাংশন
+    function addAccounts() {
+      const rawText = document.getElementById('accountInput').value.trim();
+      if (!rawText) return alert('অনুগ্রহ করে সঠিক ফরম্যাটে অ্যাকাউন্ট ডিটেইলস দিন!');
+
+      const lines = rawText.split('\n');
+      let added = 0;
+
+      lines.forEach(line => {
+        const parts = line.split('|');
+        if (parts.length >= 4) {
+          accounts.push({
+            email: parts[0].trim(),
+            password: parts[1].trim(),
+            refreshToken: parts[2].trim(),
+            clientId: parts[3].trim(),
+            accessToken: null
+          });
+          added++;
+        }
+      });
+
+      document.getElementById('accountInput').value = '';
+      updateAccountTable();
+      addLog(`মোট ${added} টি অ্যাকাউন্ট যুক্ত করা হয়েছে।`, 'info');
+    }
+
+    function updateAccountTable() {
+      const tbody = document.getElementById('accountTable');
+      if (accounts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#64748b;">কোনো অ্যাকাউন্ট যুক্ত করা হয়নি</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = accounts.map((acc, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${acc.email}</td>
+          <td>${acc.clientId.substring(0, 8)}...</td>
+          <td><span style="color: #34d399;">রেডি</span></td>
+        </tr>
+      `).join('');
+    }
+
+    // ২. মাইক্রোসফট গ্রাফ এপিআই দিয়ে এক্সেস টোকেন নেওয়া
+    async function refreshAccessToken(acc) {
+      const tokenEndpoint = 'https://login.microsoftonline.com/common/oauth2/v2.0/token';
+      const params = new URLSearchParams();
+      params.append('client_id', acc.clientId);
+      params.append('grant_type', 'refresh_token');
+      params.append('refresh_token', acc.refreshToken);
+      params.append('scope', 'https://graph.microsoft.com/Mail.Send offline_access');
+
+      try {
+        const response = await fetch(tokenEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params
+        });
+
+        const data = await response.json();
+        if (data.access_token) {
+          acc.accessToken = data.access_token;
+          return data.access_token;
+        } else {
+          throw new Error(data.error_description || 'টোকেন রিফ্রেশ ব্যর্থ হয়েছে');
+        }
+      } catch (err) {
+        addLog(`[${acc.email}] টোকেন সমস্যা: ${err.message}`, 'error');
+        return null;
+      }
+    }
+
+    // ৩. গ্রাফ এপিআই দিয়ে ইমেইল সেন্ড করা
+    async function sendMailViaGraph(accessToken, recipient, subject, bodyContent) {
+      const sendMailEndpoint = 'https://graph.microsoft.com/v1.0/me/sendMail';
+      
+      const emailPayload = {
+        message: {
+          subject: subject,
+          body: {
+            contentType: "HTML",
+            content: bodyContent
+          },
+          toRecipients: [
+            { emailAddress: { address: recipient } }
+          ]
+        },
+        saveToSentItems: "true"
+      };
+
+      const response = await fetch(sendMailEndpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(emailPayload)
+      });
+
+      return response.ok;
+    }
+
+    // ৪. মার্কেটিং প্রসেস শুরু করা
+    async function startMarketing() {
+      if (accounts.length === 0) return alert('প্রথমে অন্তত একটি প্রেরক অ্যাকাউন্ট যুক্ত করুন!');
+      
+      const recipientsRaw = document.getElementById('recipientList').value.trim();
+      const subject = document.getElementById('emailSubject').value.trim();
+      const body = document.getElementById('emailBody').value.trim();
+      const delaySec = parseInt(document.getElementById('delayInput').value) || 10;
+
+      if (!recipientsRaw || !subject || !body) {
+        return alert('প্রাপক ইমেইল লিস্ট, সাবজেক্ট এবং বডি মেসেজ পূরণ করুন!');
+      }
+
+      const recipients = recipientsRaw.split('\n').map(e => e.trim()).filter(e => e);
+      
+      isRunning = true;
+      sentCount = 0;
+      failedCount = 0;
+      
+      document.getElementById('totalCount').innerText = recipients.length;
+      document.getElementById('sentCount').innerText = 0;
+      document.getElementById('failedCount').innerText = 0;
+      
+      document.getElementById('startBtn').style.display = 'none';
+      document.getElementById('stopBtn').style.display = 'block';
+
+      addLog('অটোমেটেড ইমেইল মার্কেটিং শুরু হয়েছে...', 'info');
+
+      let currentAccountIndex = 0;
+
+      for (let i = 0; i < recipients.length; i++) {
+        if (!isRunning) break;
+
+        const recipient = recipients[i];
+        const currentAcc = accounts[currentAccountIndex];
+
+        addLog(`[${i + 1}/${recipients.length}] ${recipient} -এ ইমেইল পাঠানো হচ্ছে (${currentAcc.email} দিয়ে)...`, 'info');
+
+        // টোকেন না থাকলে বা নতুন করে নিতে রিফ্রেশ করা
+        if (!currentAcc.accessToken) {
+          await refreshAccessToken(currentAcc);
+        }
+
+        if (currentAcc.accessToken) {
+          try {
+            const success = await sendMailViaGraph(currentAcc.accessToken, recipient, subject, body);
+            
+            if (success) {
+              sentCount++;
+              document.getElementById('sentCount').innerText = sentCount;
+              addLog(`✅ সফলভাবে পাঠানো হয়েছে: ${recipient}`, 'success');
+            } else {
+              // রিফ্রেশ টোকেন আবার নতুন করে চেষ্টা করা
+              const newAccToken = await refreshAccessToken(currentAcc);
+              const retrySuccess = newAccToken ? await sendMailViaGraph(newAccToken, recipient, subject, body) : false;
+
+              if (retrySuccess) {
+                sentCount++;
+                document.getElementById('sentCount').innerText = sentCount;
+                addLog(`✅ পুনঃচেষ্টায় সফল: ${recipient}`, 'success');
+              } else {
+                failedCount++;
+                document.getElementById('failedCount').innerText = failedCount;
+                addLog(`❌ ব্যর্থ হয়েছে: ${recipient}`, 'error');
+              }
+            }
+          } catch (e) {
+            failedCount++;
+            document.getElementById('failedCount').innerText = failedCount;
+            addLog(`❌ ইমেইল পাঠাতে এরর: ${recipient}`, 'error');
+          }
+        } else {
+          failedCount++;
+          document.getElementById('failedCount').innerText = failedCount;
+          addLog(`❌ টোকেন না পাওয়ায় স্কিপ করা হয়েছে: ${recipient}`, 'error');
+        }
+
+        // অ্যাকাউন্ট রোটেশন (পরবর্তী ইমেইলের জন্য অন্য অ্যাকাউন্ট ব্যবহার)
+        currentAccountIndex = (currentAccountIndex + 1) % accounts.length;
+
+        // বিরতি (Delay)
+        if (i < recipients.length - 1 && isRunning) {
+          addLog(`অপেক্ষা করা হচ্ছে ${delaySec} সেকেন্ড...`, 'info');
+          await new Promise(r => setTimeout(r, delaySec * 1000));
+        }
+      }
+
+      stopMarketing();
+      addLog('মার্কেটিং প্রসেস সম্পন্ন হয়েছে!', 'success');
+    }
+
+    function stopMarketing() {
+      isRunning = false;
+      document.getElementById('startBtn').style.display = 'block';
+      document.getElementById('stopBtn').style.display = 'none';
+    }
+
+    function addLog(message, type = 'info') {
+      const logBox = document.getElementById('logBox');
+      const entry = document.createElement('div');
+      const time = new Date().toLocaleTimeString();
+      entry.className = `log-entry log-${type}`;
+      entry.innerText = `[${time}] ${message}`;
+      logBox.appendChild(entry);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+  </script>
+</body>
+</html>
