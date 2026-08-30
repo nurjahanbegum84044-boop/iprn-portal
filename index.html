@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vercel Web Test Automation</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #0f172a; color: #f8fafc; }
+    #toolbar { background: #1e293b; padding: 12px 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; border-bottom: 1px solid #334155; }
+    input[type="text"] { padding: 8px 12px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 6px; flex: 1; min-width: 220px; }
+    button { padding: 8px 16px; cursor: pointer; border: none; border-radius: 6px; font-weight: 600; font-size: 14px; transition: 0.2s; }
+    .btn-open { background: #3b82f6; color: white; }
+    .btn-rec { background: #ef4444; color: white; }
+    .btn-save { background: #f59e0b; color: white; }
+    .btn-play { background: #10b981; color: white; }
+    .btn-stop { background: #64748b; color: white; }
+    button:hover { opacity: 0.9; }
+    #status { margin-left: auto; font-size: 14px; color: #38bdf8; font-weight: 500; }
+    #frame-container { width: 100%; height: calc(100vh - 60px); background: #ffffff; }
+    iframe { width: 100%; height: 100%; border: none; }
+  </style>
+</head>
+<body>
+
+  <div id="toolbar">
+    <input type="text" id="targetUrl" placeholder="রিলেটিভ লিঙ্ক (যেমন: /signup) অথবা প্রক্সি লিঙ্ক">
+    <button class="btn-open" onclick="loadUrl()">ওপেন</button>
+    <button class="btn-rec" onclick="startRecording()">🔴 রেকর্ড</button>
+    <button class="btn-save" onclick="stopRecording()">💾 সেভ</button>
+    <button class="btn-play" onclick="startAutomation()">▶️ স্টার্ট</button>
+    <button class="btn-stop" onclick="stopAutomation()">⏹️ স্টপ</button>
+    <span id="status">স্ট্যাটাস: নিষ্ক্রিয়</span>
+  </div>
+
+  <div id="frame-container">
+    <iframe id="webFrame" src="about:blank"></iframe>
+  </div>
+
+  <script>
+    let recordedSteps = [];
+    let isRecording = false;
+    let isRunning = false;
+    const iframe = document.getElementById('webFrame');
+    const statusText = document.getElementById('status');
+
+    function loadUrl() {
+      const url = document.getElementById('targetUrl').value.trim();
+      if (!url) return alert('অনুগ্রহ করে একটি URL বা প্যাথ লিখুন!');
+      iframe.src = url;
+      statusText.innerText = 'স্ট্যাটাস: পেজ লোড হচ্ছে...';
+    }
+
+    function startRecording() {
+      recordedSteps = [];
+      isRecording = true;
+      statusText.innerText = 'স্ট্যাটাস: রেকর্ড হচ্ছে (ক্লিক করুন)...';
+
+      // ১. একই ডোমেইনের (Relative Path) জন্য সরাসরি ইভেন্ট লিসেনার
+      try {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iframeDoc.addEventListener('click', captureClick, true);
+      } catch (e) {
+        console.log("CORS ব্লকের কারণে সরাসরি অ্যাক্সেস নেই। প্রক্সি মেসেজ মোড সক্রিয় রয়েছে।");
+      }
+    }
+
+    function captureClick(e) {
+      if (!isRecording) return;
+      let selector = e.target.id ? '#' + e.target.id : (e.target.className ? '.' + Array.from(e.target.classList).join('.').replace(/\s+/g, '.') : e.target.tagName.toLowerCase());
+      recordedSteps.push({ selector: selector });
+      statusText.innerText = `স্ট্যাটাস: ${recordedSteps.length} টি অ্যাকশন সেভ হয়েছে`;
+    }
+
+    // ২. প্রক্সি সার্ভার থেকে আসা Message Event হ্যান্ডলার
+    window.addEventListener('message', function(event) {
+      if (!isRecording) return;
+      if (event.data && event.data.type === 'RECORD_CLICK') {
+        recordedSteps.push({ selector: event.data.selector });
+        statusText.innerText = `স্ট্যাটাস: ${recordedSteps.length} টি অ্যাকশন সেভ হয়েছে`;
+      }
+    });
+
+    function stopRecording() {
+      isRecording = false;
+      statusText.innerText = `স্ট্যাটাস: মোট ${recordedSteps.length} টি অ্যাকশন সেভ করা আছে`;
+    }
+
+    async function startAutomation() {
+      if (recordedSteps.length === 0) return alert('কোনো অ্যাকশন সেভ করা নেই!');
+      isRunning = true;
+      statusText.innerText = 'স্ট্যাটাস: অটোমেশন চলছে...';
+
+      for (let i = 0; i < recordedSteps.length; i++) {
+        if (!isRunning) break;
+        let step = recordedSteps[i];
+        await new Promise(r => setTimeout(r, 1200));
+
+        try {
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+          const el = iframeDoc.querySelector(step.selector);
+          if (el) {
+            el.style.outline = '2px solid red';
+            el.click();
+          }
+        } catch (e) {
+          console.error("অটোমেশন এক্সিকিউশনে সমস্যা:", e);
+        }
+      }
+      
+      if (isRunning) {
+        statusText.innerText = 'স্ট্যাটাস: টেস্ট সফলভাবে সম্পন্ন হয়েছে!';
+        isRunning = false;
+      }
+    }
+
+    function stopAutomation() {
+      isRunning = false;
+      statusText.innerText = 'স্ট্যাটাস: অটোমেশন থামানো হয়েছে';
+    }
+  </script>
+</body>
+</html>
