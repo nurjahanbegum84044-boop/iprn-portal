@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TGZ by Zoo9 Cloud - Pro Light</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: { colors: { brand: { 500: '#6366f1', 600: '#4f46e5' } } }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #1e293b; overflow-x: hidden; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Full Transparent Clear Background Animation Canvas */
+        #bgMatrixCanvas {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -2;
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        /* Custom Background Video Element */
+        #bgVideoElement {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            object-fit: cover;
+            z-index: -3;
+            display: none;
+        }
+
+        .glass-white { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(226, 232, 240, 0.8); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative">
+
+    <!-- Background Matrix Canvas (Clear & Visible) -->
+    <canvas id="bgMatrixCanvas"></canvas>
+    
+    <!-- Custom Background Video Player -->
+    <video id="bgVideoElement" autoplay muted loop></video>
+
+    <!-- Top Navbar -->
+    <header class="glass-white border-b border-slate-200 sticky top-0 z-40 px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <button onclick="toggleSidebar()" class="p-2 rounded-xl bg-slate-100 text-slate-700 focus:outline-none md:hidden shadow-sm">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+            <span class="font-bold text-lg tracking-tight text-slate-900" id="navTitle">Home</span>
+        </div>
+        <div class="flex items-center space-x-4 text-xs font-mono text-slate-600">
+            <div class="flex items-center space-x-1"><span>⚡</span> <span id="pingMs">18 ms</span></div>
+            <div class="flex items-center space-x-1"><span>🔄</span> <span id="activeCountBadge">0 Active</span></div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 relative">
+        <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/40 z-40 hidden md:hidden"></div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 glass-white border-r border-slate-200 transform -translate-x-full md:translate-x-0 md:static transition-transform duration-300 flex flex-col justify-between p-5">
+            <div>
+                <div class="flex items-center space-x-3 mb-6 pb-4 border-b border-slate-100">
+                    <div class="w-10 h-10 rounded-full border-2 border-indigo-600 flex items-center justify-center text-indigo-600 font-bold bg-indigo-50">TGZ</div>
+                    <div>
+                        <h1 class="font-extrabold text-slate-900">TGZ</h1>
+                        <p class="text-xs text-slate-500">By Zoo9 CLOUD</p>
+                    </div>
+                </div>
+
+                <nav class="space-y-1.5">
+                    <a href="#" onclick="switchTab('home')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-slate-600 hover:bg-slate-100 transition active" data-tab="home"><span>🏠</span> <span>Home</span></a>
+                    <a href="#" onclick="switchTab('getnum')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-slate-600 hover:bg-slate-100 transition" data-tab="getnum"><span>📞</span> <span>Get Num</span></a>
+                    <a href="#" onclick="switchTab('console')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-slate-600 hover:bg-slate-100 transition" data-tab="console"><span>💻</span> <span>Console</span></a>
+                    <a href="#" onclick="switchTab('accesslist')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-slate-600 hover:bg-slate-100 transition" data-tab="accesslist"><span>📋</span> <span>Access List</span></a>
+                    <a href="#" onclick="switchTab('settings')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-slate-600 hover:bg-slate-100 transition" data-tab="settings"><span>⚙️</span> <span>Settings</span></a>
+                    <a href="#" onclick="alert('Logged out')" class="flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-red-600 hover:bg-red-50 transition"><span>🚪</span> <span>Logout</span></a>
+                </nav>
+            </div>
+            <div class="pt-4 border-t border-slate-100 text-xs text-emerald-600 font-mono flex items-center justify-between">
+                <span>API Node: Fast</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="flex-1 p-4 md:p-8 max-w-6xl mx-auto overflow-y-auto space-y-6">
+
+            <!-- 1. HOME TAB -->
+            <div id="home" class="tab-content active space-y-6">
+                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+                    <h2 class="text-xs uppercase tracking-wider font-semibold text-indigo-200 mb-2">Total Generated Numbers</h2>
+                    <div class="flex items-baseline space-x-4 mb-4">
+                        <span class="text-5xl font-black" id="totalGenCount">0</span>
+                    </div>
+                </div>
+
+                <div class="glass-white rounded-3xl p-6 shadow-sm text-center">
+                    <h3 class="font-bold text-lg mb-4 text-slate-800">Zero Profile</h3>
+                    <div class="w-20 h-20 bg-slate-100 rounded-full mx-auto flex items-center justify-center mb-3 text-3xl shadow-inner">👤</div>
+                    <h4 class="font-bold text-md text-slate-900">Leo Denzel</h4>
+                    <p class="text-xs text-indigo-600 mb-4">chadshikder19@gmail.com</p>
+                    <button onclick="switchTab('getnum')" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-lg shadow-indigo-600/20 flex items-center justify-center space-x-2 transition">
+                        <span>📞</span> <span>Go to Get Num</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. GET NUM TAB -->
+            <div id="getnum" class="tab-content space-y-6">
+                <div class="glass-white p-5 md:p-6 rounded-3xl space-y-4 shadow-sm">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-sm text-indigo-600">Generate Virtual Number</h3>
+                        <span class="text-xs text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded-full font-semibold">Instant Speed</span>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-500 block mb-1 font-semibold">ENTER RANGE ID (rid) / NUMBER PREFIX</label>
+                        <input type="text" id="customRidInput" placeholder="আপনার রেঞ্জ বা আইডি লিখুন (যেমন: 26134)" class="w-full bg-white border border-slate-300 p-3.5 rounded-2xl text-sm font-mono focus:outline-none focus:border-indigo-600 text-slate-900 shadow-sm">
+                    </div>
+                    <button onclick="fetchVirtualNumber()" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl font-bold shadow-xl shadow-indigo-600/25 flex items-center justify-center space-x-2 active:scale-95 transition">
+                        <span>🚀</span> <span>Get Number (ইনস্ট্যান্ট নিন)</span>
+                    </button>
+                </div>
+
+                <!-- Number List & Download Section -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center px-1">
+                        <span id="allocCount" class="text-xs text-slate-600 font-mono font-semibold">0 Numbers Stored</span>
+                        <div class="flex space-x-2">
+                            <button onclick="downloadTxt()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center space-x-1 shadow-md transition"><span>📥</span> <span>Download TXT</span></button>
+                            <button onclick="clearAllNumbers()" class="px-3 py-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-xl text-xs font-semibold transition">Clear All</button>
+                        </div>
+                    </div>
+                    <div id="allocatedNumberContainer" class="space-y-3">
+                        <div class="glass-white p-8 rounded-3xl text-center text-slate-400 text-xs italic shadow-sm">
+                            কোনো নম্বর জেনারেট করা হয়নি। উপরে রেঞ্জ লিখে Get Number এ ক্লিক করুন।
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. CONSOLE TAB -->
+            <div id="console" class="tab-content space-y-6">
+                <div class="glass-white p-6 rounded-3xl shadow-sm space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-sm text-indigo-600">Live Console Feed (Global Hits)</h3>
+                        <button onclick="fetchConsoleData()" class="text-xs text-indigo-600 hover:underline font-semibold">🔄 Refresh</button>
+                    </div>
+                    <div id="consoleFeedList" class="space-y-2 font-mono text-xs text-slate-700 max-h-96 overflow-y-auto">
+                        <p class="text-slate-400 italic">Loading live hits...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. ACCESS LIST TAB -->
+            <div id="accesslist" class="tab-content space-y-6">
+                <div class="glass-white p-6 rounded-3xl shadow-sm space-y-4">
+                    <h3 class="font-bold text-sm text-indigo-600">Live Access Cache Services</h3>
+                    <div id="accessListContainer" class="space-y-3">
+                        <p class="text-slate-400 text-xs italic">Fetching active services...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. SETTINGS TAB (Custom Music & Video Background Customizer) -->
+            <div id="settings" class="tab-content space-y-6">
+                <div class="glass-white p-6 rounded-3xl shadow-sm space-y-5">
+                    <h3 class="font-bold text-slate-900 text-base">Custom Background & Audio Settings</h3>
+                    
+                    <!-- Background Video Link Input -->
+                    <div>
+                        <label class="text-xs text-slate-600 font-semibold block mb-1">BACKGROUND VIDEO URL (MP4 Link)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="bgVideoUrlInput" placeholder="এখানে কোনো ভিডিওর সরাসরি লিংক পেস্ট করুন (.mp4)" class="flex-1 bg-white border border-slate-300 p-3 rounded-2xl text-xs font-mono text-slate-800 shadow-sm focus:outline-none focus:border-indigo-600">
+                            <button onclick="applyBgVideo()" class="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-bold transition">Set Video</button>
+                        </div>
+                    </div>
+
+                    <!-- Background Music Audio Link Input -->
+                    <div>
+                        <label class="text-xs text-slate-600 font-semibold block mb-1">BACKGROUND AUDIO / SONG URL (MP3/Audio Link)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="bgAudioUrlInput" placeholder="এখানে গানের সরাসরি লিংক পেস্ট করুন (.mp3)" class="flex-1 bg-white border border-slate-300 p-3 rounded-2xl text-xs font-mono text-slate-800 shadow-sm focus:outline-none focus:border-indigo-600">
+                            <button onclick="applyBgAudio()" class="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold transition">Play Song</button>
+                        </div>
+                        <audio id="bgAudioPlayer" loop></audio>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-slate-500">API Token Key</label>
+                        <input type="text" id="apiKeyInput" value="M8OSXY9XKQ3" class="w-full bg-slate-100 border border-slate-300 p-3 rounded-2xl text-xs font-mono text-slate-700 mt-1" disabled>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 bg-emerald-600 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center space-x-3 text-xs font-mono border border-emerald-400/30">
+        <span>✅</span> <span id="toastMsg">Copied!</span>
+    </div>
+
+    <script>
+        // Background Matrix Animation Engine (Optimized & Clear)
+        const canvas = document.getElementById('bgMatrixCanvas');
+        const ctx = canvas.getContext('2d');
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const chars = "0101010101XYZABCDEFOTPGETNUM2OO9";
+        const fontSize = 14;
+        let columns = canvas.width / fontSize;
+        let drops = [];
+        for (let i = 0; i < columns; i++) { drops[i] = 1; }
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(248, 250, 252, 0.2)'; // Light clear wipe
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#4f46e5'; // Indigo bright clear font
+            ctx.font = 'bold ' + fontSize + 'px "JetBrains Mono", monospace';
+            for (let i = 0; i < drops.length; i++) {
+                let text = chars.charAt(Math.floor(Math.random() * chars.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 50);
+
+        // Custom Video & Audio Apply Functions
+        function applyBgVideo() {
+            const url = document.getElementById('bgVideoUrlInput').value.trim();
+            const videoElem = document.getElementById('bgVideoElement');
+            if(url) {
+                videoElem.src = url;
+                videoElem.style.display = 'block';
+                videoElem.play().catch(e => alert("Video play error or unsupported format!"));
+                showToast("Background video applied!");
+            } else {
+                videoElem.style.display = 'none';
+                videoElem.src = '';
+                showToast("Video removed");
+            }
+        }
+
+        function applyBgAudio() {
+            const url = document.getElementById('bgAudioUrlInput').value.trim();
+            const audioElem = document.getElementById('bgAudioPlayer');
+            if(url) {
+                audioElem.src = url;
+                audioElem.play().then(() => {
+                    showToast("Background music playing!");
+                }).catch(e => alert("Audio playback blocked or invalid link!"));
+            } else {
+                audioElem.pause();
+                audioElem.src = '';
+                showToast("Music stopped");
+            }
+        }
+
+        // App Logic
+        const apiKey = "M8OSXY9XKQ3";
+        const baseUrl = "https://api.2oo9.cloud/MXS47FLFX0U/tness/@public/api";
+        let storedNumbers = [];
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('bg-slate-200', 'text-indigo-600', 'font-semibold'));
+            
+            document.getElementById(tabId).classList.add('active');
+            const activeLink = document.querySelector(`[data-tab="${tabId}"]`);
+            if(activeLink) activeLink.classList.add('bg-slate-200', 'text-indigo-600', 'font-semibold');
+            document.getElementById('navTitle').innerText = tabId.toUpperCase();
+            
+            if(window.innerWidth < 768) toggleSidebar();
+            if(tabId === 'console') fetchConsoleData();
+            if(tabId === 'accesslist') fetchAccessListData();
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('sidebarOverlay').classList.toggle('hidden');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-24', 'opacity-0'), 2500);
+        }
+
+        function copyText(text, customMsg) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(customMsg || `Copied: ${text}`);
+            });
+        }
+
+        // Fast Instant Number Fetcher
+        async function fetchVirtualNumber() {
+            const rid = document.getElementById('customRidInput').value.trim();
+            if(!rid) {
+                showToast("দয়া করে রেঞ্জ আইডি বা প্রিফিক্স লিখুন!");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${baseUrl}/getnum`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'mauthapi': apiKey },
+                    body: JSON.stringify({ rid: rid })
+                });
+                const resData = await response.json();
+
+                if(resData.meta.code === 200) {
+                    const fullNum = resData.data.full_number;
+                    const cleanNum = resData.data.no_plus_number;
+                    const countryOp = `${resData.data.country} - ${resData.data.operator}`;
+
+                    copyText(fullNum, `নম্বর অটো-কপি হয়েছে: ${fullNum}`);
+
+                    storedNumbers.unshift({
+                        number: fullNum,
+                        clean: cleanNum,
+                        info: countryOp,
+                        otp: 'Waiting for OTP...',
+                        time: new Date().toLocaleTimeString()
+                    });
+
+                    renderNumberList();
+                } else {
+                    showToast(`ত্রুটি: ${resData.message || 'স্টক শেষ'}`);
+                }
+            } catch(e) {
+                showToast("নেটওয়ার্ক বা এপিআই কানেকশন সমস্যা");
+            }
+        }
+
+        function renderNumberList() {
+            const container = document.getElementById('allocatedNumberContainer');
+            document.getElementById('allocCount').innerText = `${storedNumbers.length} Numbers Stored`;
+            document.getElementById('totalGenCount').innerText = storedNumbers.length;
+            document.getElementById('activeCountBadge').innerText = `${storedNumbers.length} Active`;
+
+            if(storedNumbers.length === 0) {
+                container.innerHTML = `<div class="glass-white p-8 rounded-3xl text-center text-slate-400 text-xs italic shadow-sm">কোনো নম্বর জেনারেট করা হয়নি।</div>`;
+                return;
+            }
+
+            container.innerHTML = storedNumbers.map((item) => `
+                <div class="glass-white p-4 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border border-slate-200 shadow-sm hover:border-indigo-500 transition">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="font-mono font-bold text-base text-slate-900 cursor-pointer hover:text-indigo-600" onclick="copyText('${item.number}', 'Copied: ${item.number}')">${item.number}</span>
+                            <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono shadow-inner">${item.time}</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-0.5">📶 ${item.info}</p>
+                    </div>
+                    <div class="w-full sm:w-auto text-left sm:text-right">
+                        <span class="inline-block text-xs px-3 py-1.5 rounded-xl bg-amber-100 text-amber-700 font-mono border border-amber-200 animate-pulse font-semibold">
+                            🔑 ${item.otp}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function downloadTxt() {
+            if(storedNumbers.length === 0) {
+                showToast("ডাউনলোড করার মতো কোনো নম্বর নেই!");
+                return;
+            }
+            let textContent = "TGZ SMS PANEL - NUMBER & OTP REPORT\n=====================================\n\n";
+            storedNumbers.forEach((item, index) => {
+                textContent += `[${index + 1}] Number: ${item.number} | Info: ${item.info} | OTP: ${item.otp} | Time: ${item.time}\n`;
+            });
+
+            const blob = new Blob([textContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `TGZ_Numbers_OTPs_${Date.now()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("টিএক্সটি ফাইল সফলভাবে ডাউনলোড হয়েছে!");
+        }
+
+        function clearAllNumbers() {
+            if(confirm("সব নম্বর মুছে ফেলতে চান?")) {
+                storedNumbers = [];
+                renderNumberList();
+            }
+        }
+
+        async function backgroundOtpSync() {
+            if(storedNumbers.length === 0) return;
+            try {
+                const response = await fetch(`${baseUrl}/success-otp`, { headers: { 'mauthapi': apiKey } });
+                const data = await response.json();
+                if(data.meta.code === 200 && data.data.otps) {
+                    data.data.otps.forEach(otpItem => {
+                        const target = storedNumbers.find(n => n.clean === otpItem.number || n.number.includes(otpItem.number));
+                        if(target && target.otp !== otpItem.message) {
+                            target.otp = otpItem.message;
+                            copyText(otpItem.message, `⚡ ওটিপি অটো-কপি হয়েছে: ${otpItem.message}`);
+                            renderNumberList();
+                        }
+                    });
+                }
+            } catch(e) {}
+        }
+
+        async function fetchConsoleData() {
+            try {
+                const response = await fetch(`${baseUrl}/console`, { headers: { 'mauthapi': apiKey } });
+                const data = await response.json();
+                const list = document.getElementById('consoleFeedList');
+                if(data.meta.code === 200 && data.data.hits) {
+                    list.innerHTML = data.data.hits.map(hit => `
+                        <div class="border-b border-slate-200 pb-2 flex justify-between items-center">
+                            <div><span class="text-indigo-600 font-bold">[${hit.range}]</span> <span class="text-purple-600">${hit.sid}</span>: ${hit.message}</div>
+                            <span class="text-[10px] text-slate-400">${new Date(hit.time).toLocaleTimeString()}</span>
+                        </div>
+                    `).join('');
+                }
+            } catch(e) {}
+        }
+
+        async function fetchAccessListData() {
+            try {
+                const response = await fetch(`${baseUrl}/liveaccess`, { headers: { 'mauthapi': apiKey } });
+                const data = await response.json();
+                const container = document.getElementById('accessListContainer');
+                if(data.meta.code === 200 && data.data.services) {
+                    container.innerHTML = data.data.services.map(srv => `
+                        <div class="glass-white p-4 rounded-2xl flex justify-between items-center border border-slate-200 shadow-sm">
+                            <span class="font-bold text-slate-800 text-sm">${srv.sid}</span>
+                            <span class="text-xs text-indigo-600 font-mono">Ranges: ${srv.ranges.join(', ')}</span>
+                        </div>
+                    `).join('');
+                }
+            } catch(e) {}
+        }
+
+        setInterval(backgroundOtpSync, 4000);
+    </script>
+</body>
+</html>
