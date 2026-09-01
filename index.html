@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TGZ by Zoo9 Cloud</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#6366f1', 600: '#4f46e5' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .dark body { background-color: #0f172a; color: #f1f5f9; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Top Navbar / Header -->
+    <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <button onclick="toggleSidebar()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+            <span class="font-bold text-lg tracking-tight text-slate-800 dark:text-white" id="navTitle">Home</span>
+        </div>
+        <div class="flex items-center space-x-4 text-xs font-mono text-slate-500 dark:text-slate-400">
+            <div class="hidden sm:flex items-center space-x-1"><span>🕒</span> <span id="utcTime">10:37:40</span></div>
+            <div class="flex items-center space-x-1"><span>⚡</span> <span id="pingMs">516 ms</span></div>
+            <div class="flex items-center space-x-1"><span>🔄</span> <span id="onlineCount">296</span></div>
+            <div class="flex items-center space-x-1"><span>💾</span> <span id="storageSize">15.5 KB</span></div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 relative">
+        <!-- Sidebar Backdrop for Mobile -->
+        <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden"></div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transform -translate-x-full md:translate-x-0 md:static transition-transform duration-300 flex flex-col justify-between p-5">
+            <div>
+                <!-- Brand -->
+                <div class="flex items-center space-x-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <div class="w-10 h-10 rounded-full border-2 border-indigo-500 flex items-center justify-center text-indigo-500 font-bold">TGZ</div>
+                    <div>
+                        <h1 class="font-extrabold text-slate-900 dark:text-white">TGZ</h1>
+                        <p class="text-xs text-slate-400">By Zoo9 CLOUD</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Links -->
+                <nav class="space-y-1.5">
+                    <a href="#" onclick="switchTab('home')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition active" data-tab="home">
+                        <span>🏠</span> <span>Home</span>
+                    </a>
+                    <a href="#" onclick="switchTab('getnum')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" data-tab="getnum">
+                        <span>📞</span> <span>Get Num</span>
+                    </a>
+                    <a href="#" onclick="switchTab('console')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" data-tab="console">
+                        <span>💻</span> <span>Console</span>
+                    </a>
+                    <a href="#" onclick="switchTab('accesslist')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" data-tab="accesslist">
+                        <span>📋</span> <span>Access List</span>
+                    </a>
+                    <a href="#" onclick="switchTab('mysms')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" data-tab="mysms">
+                        <span>✉️</span> <span>My SMS</span>
+                    </a>
+                    <a href="#" onclick="switchTab('testnum')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" data-tab="testnum">
+                        <span>🧪</span> <span>Test Num</span>
+                    </a>
+                    <a href="#" onclick="switchTab('settings')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" data-tab="settings">
+                        <span>⚙️</span> <span>Settings</span>
+                    </a>
+                    <a href="#" onclick="alert('Logged out')" class="flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition">
+                        <span>🚪</span> <span>Logout</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Bottom Action Buttons -->
+            <div class="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button class="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-between">
+                    <span>⚡ Are you developer</span> <span>›</span>
+                </button>
+                <button class="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-between">
+                    <span>🌐 Nodes</span> <span>›</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <main class="flex-1 p-4 md:p-8 max-w-6xl mx-auto overflow-y-auto">
+
+            <!-- 1. HOME TAB -->
+            <div id="home" class="tab-content active space-y-6">
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+                    <h2 class="text-xs uppercase tracking-wider font-semibold text-indigo-200 mb-2">Today SMS</h2>
+                    <div class="flex items-baseline space-x-4 mb-4">
+                        <span class="text-5xl font-black">0</span>
+                        <div class="flex-1 bg-white/20 h-2 rounded-full overflow-hidden">
+                            <div class="bg-white h-full w-0"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 pt-4 border-t border-white/20 text-xs">
+                        <div><p class="text-indigo-200">Operators</p><p class="text-lg font-bold">0</p></div>
+                        <div><p class="text-indigo-200">Countries</p><p class="text-lg font-bold">0</p></div>
+                        <div><p class="text-indigo-200">Access PR</p><p class="text-lg font-bold">0</p></div>
+                    </div>
+                </div>
+
+                <!-- Top SID Cards -->
+                <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <h3 class="text-sm font-semibold text-slate-400 mb-2">Today Top SID</h3>
+                    <p class="text-xl font-bold mb-1">—</p>
+                    <p class="text-xs text-slate-400 mb-4">0 OTPs today</p>
+                    <div class="bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden"><div class="bg-indigo-500 h-full w-0"></div></div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <h3 class="text-sm font-semibold text-slate-400 mb-2">2nd Top SID</h3>
+                    <p class="text-xl font-bold mb-1">—</p>
+                    <p class="text-xs text-slate-400 mb-4">0 OTPs today</p>
+                    <div class="bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden"><div class="bg-indigo-500 h-full w-0"></div></div>
+                </div>
+
+                <!-- Zero Profile Summary Card -->
+                <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm text-center">
+                    <h3 class="font-bold text-lg mb-4">Zero Profile</h3>
+                    <div class="w-20 h-20 bg-indigo-100 dark:bg-slate-800 rounded-full mx-auto flex items-center justify-center mb-3 text-3xl">👤</div>
+                    <h4 class="font-bold text-md">Leo Denzel</h4>
+                    <p class="text-xs text-indigo-500 mb-4 cursor-pointer" onclick="switchTab('settings')">Edit Profile</p>
+                    <div class="text-left space-y-2 text-xs border-t border-slate-100 dark:border-slate-800 pt-4">
+                        <div class="flex justify-between"><span class="text-slate-400">Email</span> <span class="font-mono">chadshikder19@gmail.com</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Role</span> <span class="font-semibold text-indigo-500">Dialer</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Today SMS</span> <span class="font-bold">0</span></div>
+                    </div>
+                    <button onclick="switchTab('getnum')" class="mt-6 w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-semibold shadow-lg shadow-indigo-500/30 flex items-center justify-center space-x-2">
+                        <span>📞</span> <span>Get Num</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. GET NUM TAB -->
+            <div id="getnum" class="tab-content space-y-6">
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-sm text-slate-500">Filters & Stats</h3>
+                        <span class="text-xs text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full font-semibold">Success</span>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">COUNTRY & OPERATOR</label>
+                        <select class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl text-sm focus:outline-none focus:border-indigo-500">
+                            <option>Algeria - Ooredoo</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">RANGE</label>
+                        <select id="rangeSelect" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl text-sm focus:outline-none focus:border-indigo-500 font-mono">
+                            <option value="21355072">21355072XXX</option>
+                            <option value="225017">225017XXX</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-4 text-xs">
+                        <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" checked class="rounded text-indigo-600"> <span>National Format</span></label>
+                        <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" class="rounded text-indigo-600"> <span>Remove (+)</span></label>
+                    </div>
+                    <button onclick="fetchVirtualNumber()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold shadow-lg shadow-indigo-500/20 flex items-center justify-center space-x-2">
+                        <span>📞</span> <span>Get Number</span>
+                    </button>
+                </div>
+
+                <!-- Number Result Feed -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center text-xs text-slate-400 px-1">
+                        <span id="allocCount">0 of 0 • RECONNECTING...</span>
+                        <button onclick="refreshAllocations()" class="flex items-center space-x-1 hover:text-indigo-500"><span>🔄</span> <span>Refresh</span></button>
+                    </div>
+                    <div id="allocatedNumberContainer" class="space-y-3">
+                        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 text-center text-slate-400 text-xs">
+                            Connecting to the number report...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. CONSOLE TAB -->
+            <div id="console" class="tab-content space-y-6">
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800">
+                    <h3 class="font-bold text-sm text-slate-400 mb-4">Top Senders</h3>
+                    <div id="topSendersList" class="text-xs text-slate-400 text-center py-6">No senders yet</div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800">
+                    <h3 class="font-bold text-sm text-slate-400 mb-4">Carrier Distribution</h3>
+                    <div class="text-xs text-slate-400 text-center py-6">No carriers reported</div>
+                </div>
+            </div>
+
+            <!-- 4. ACCESS LIST TAB -->
+            <div id="accesslist" class="tab-content space-y-6">
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">SID</label>
+                        <input type="text" id="accessSid" placeholder="e.g. GOOGLE" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl text-sm focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">Under Message</label>
+                        <input type="text" placeholder="text inside body" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl text-sm focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">Country</label>
+                        <input type="text" placeholder="e.g. Bangladesh" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl text-sm focus:outline-none">
+                    </div>
+                    <button onclick="searchAccess()" class="w-full py-3.5 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg flex items-center justify-center space-x-2">
+                        <span>🔍</span> <span>Search</span>
+                    </button>
+                </div>
+                <div id="accessResult" class="text-center text-xs text-slate-400 py-10">No search yet</div>
+            </div>
+
+            <!-- 5. MY SMS TAB -->
+            <div id="mysms" class="tab-content space-y-6">
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-sm">My SMS Report</h3>
+                        <button class="text-xs text-indigo-500 flex items-center space-x-1"><span>🔄</span> <span>Reload</span></button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <select class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl text-xs"><option>date: today</option></select>
+                        <select class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl text-xs"><option>status: all</option></select>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-10 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">
+                    No rows for this filter.
+                </div>
+            </div>
+
+            <!-- 6. TEST NUM TAB -->
+            <div id="testnum" class="tab-content space-y-6">
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400">
+                    Copy a number, send a test SMS to it, and watch it arrive below in real time.
+                </div>
+            </div>
+
+            <!-- 7. SETTINGS TAB -->
+            <div id="settings" class="tab-content space-y-6">
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold">Profile & Active Sessions</h3>
+                        <button onclick="alert('Refreshed')" class="text-xs text-indigo-500">🔄 Refresh</button>
+                    </div>
+                    <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-2xl mx-auto">👤</div>
+                    <div>
+                        <label class="text-xs text-slate-400">FULL NAME</label>
+                        <input type="text" value="Leo Denzel" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl text-sm border border-slate-200 dark:border-slate-700 mt-1">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400">EMAIL</label>
+                        <input type="text" value="chadshikder19@gmail.com" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl text-sm border border-slate-200 dark:border-slate-700 mt-1">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400">ASSIGNED NODE</label>
+                        <input type="text" value="SOVQ (M1RR5K3W92Q)" disabled class="w-full bg-slate-100 dark:bg-slate-800 p-3 rounded-2xl text-sm border border-slate-200 dark:border-slate-700 mt-1 opacity-70">
+                    </div>
+                    <div class="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl text-xs space-y-2">
+                        <div class="font-bold flex items-center justify-between"><span>Active sessions</span> <span class="text-emerald-500">• THIS DEVICE</span></div>
+                        <p class="text-slate-400">Chrome 151 • Android</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Toast Popup Notification (Auto-Copy feedback) -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 bg-emerald-600 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center space-x-3 text-xs font-mono border border-emerald-400/30">
+        <span>✅</span> <span id="toastMsg">Number copied</span>
+    </div>
+
+    <script>
+        // Switch Tabs Function
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-indigo-600'));
+            
+            document.getElementById(tabId).classList.add('active');
+            const activeLink = document.querySelector(`[data-tab="${tabId}"]`);
+            if(activeLink) {
+                activeLink.classList.add('bg-slate-100', 'dark:bg-slate-800', 'text-indigo-600');
+            }
+            document.getElementById('navTitle').innerText = tabId.toUpperCase();
+            
+            // Close mobile sidebar on click
+            if(window.innerWidth < 768) {
+                toggleSidebar();
+            }
+        }
+
+        // Sidebar Toggle for Mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        // Toast Notification
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 2500);
+        }
+
+        // Clipboard Copy Utility
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`Number copied\n+${text}`);
+            });
+        }
+
+        // Virtual Number Fetcher (Integrated with your API)
+        async function fetchVirtualNumber() {
+            const rid = document.getElementById('rangeSelect').value;
+            const container = document.getElementById('allocatedNumberContainer');
+            const apiKey = "M8OSXY9XKQ3"; // Your Token API key
+            
+            container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-indigo-500 animate-pulse">Allocating number...</div>`;
+
+            try {
+                const response = await fetch(`https://api.2oo9.cloud/MXS47FLFX0U/tness/@public/api/getnum`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'mauthapi': apiKey
+                    },
+                    body: JSON.stringify({ rid: rid })
+                });
+                const resData = await response.json();
+
+                if(resData.meta.code === 200) {
+                    const numFull = resData.data.full_number;
+                    const country = resData.data.country;
+                    const operator = resData.data.operator;
+                    
+                    // Auto Copy Number Immediately
+                    copyText(numFull);
+
+                    container.innerHTML = `
+                        <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
+                            <div class="flex justify-between items-center">
+                                <span class="font-mono font-bold text-sm text-indigo-400 cursor-pointer" onclick="copyText('${numFull}')">${numFull}</span>
+                                <span class="text-xs px-2.5 py-1 bg-amber-500/10 text-amber-500 font-mono rounded-full animate-pulse">PENDING</span>
+                            </div>
+                            <div class="text-xs text-slate-400 flex items-center justify-between">
+                                <span>📶 ${operator} (${country})</span>
+                                <button onclick="this.closest('.bg-white').remove()" class="text-red-400 hover:text-red-500">✕</button>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('allocCount').innerText = `1 of 1 • LIVE`;
+                } else {
+                    container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-red-400">Out of stock / Error</div>`;
+                }
+            } catch(e) {
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-red-400">Network Error / CORS Blocked</div>`;
+            }
+        }
+
+        function refreshAllocations() {
+            alert('Refreshed status');
+        }
+
+        function searchAccess() {
+            const sid = document.getElementById('accessSid').value;
+            const res = document.getElementById('accessResult');
+            res.innerHTML = `<div class="p-6 bg-white dark:bg-slate-900 rounded-3xl text-xs">Searching for ${sid || 'all'}... Found matching OTP node records.</div>`;
+        }
+    </script>
+</body>
+</html>
