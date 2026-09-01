@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STEX SMS - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0d1117; color: #c9d1d9; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(22, 27, 34, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(48, 54, 61, 0.7); }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <aside class="w-64 glass flex flex-col justify-between p-6">
+        <div>
+            <h1 class="text-xl font-bold text-blue-400 mb-8">STEX SMS</h1>
+            <nav class="space-y-4">
+                <a href="#" class="block py-2.5 px-4 rounded bg-blue-600/20 text-blue-400 font-semibold">Dashboard</a>
+                <a href="#" class="block py-2.5 px-4 rounded hover:bg-gray-800 text-gray-400">Dialer Panel</a>
+                <a href="#" class="block py-2.5 px-4 rounded hover:bg-gray-800 text-gray-400">Get Number</a>
+                <a href="#" class="block py-2.5 px-4 rounded hover:bg-gray-800 text-gray-400">Console</a>
+                <a href="#" class="block py-2.5 px-4 rounded hover:bg-gray-800 text-gray-400">Account</a>
+            </nav>
+        </div>
+        <div class="text-xs text-gray-500">API Connected</div>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-y-auto p-8">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold">SMS Verification Panel</h2>
+            <div class="flex items-center space-x-4">
+                <input type="password" id="apiKey" placeholder="Enter mauthapi key" class="bg-gray-900 border border-gray-700 px-4 py-2 rounded text-sm w-64 focus:outline-none focus:border-blue-500" value="M8OSXY9XKQ3">
+            </div>
+        </div>
+
+        <div class="glass p-6 rounded-xl mb-8">
+            <h3 class="text-lg font-semibold mb-4">Get Number from Range</h3>
+            <div class="flex space-x-4">
+                <input type="text" id="ridInput" placeholder="Enter Range ID (e.g. 26134)" class="bg-gray-900 border border-gray-700 px-4 py-2 rounded flex-1 focus:outline-none focus:border-blue-500">
+                <button onclick="getNumber()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded font-semibold text-white transition">Get Number</button>
+            </div>
+            <div id="numberResult" class="mt-4 text-sm text-gray-300"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="glass p-6 rounded-xl">
+                <h3 class="text-lg font-semibold mb-4">Allocated Numbers & Live OTPs</h3>
+                <div id="allocatedList" class="space-y-3 max-h-64 overflow-y-auto">
+                    <p class="text-gray-500 text-sm">No numbers allocated yet.</p>
+                </div>
+            </div>
+
+            <div class="glass p-6 rounded-xl">
+                <h3 class="text-lg font-semibold mb-4">Live Console (Last 15 Mins)</h3>
+                <div id="consoleFeed" class="space-y-2 max-h-64 overflow-y-auto text-xs font-mono text-gray-400">
+                    <p>Loading live feed...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const baseUrl = "https://api.2oo9.cloud/MXS47FLFX0U/tness/@public/api";
+        let allocatedNumbers = [];
+
+        // Copy text to clipboard utility
+        function copyToClipboard(text, msg = "Copied to clipboard!") {
+            navigator.clipboard.writeText(text).then(() => {
+                alert(msg);
+            });
+        }
+
+        // Get Number API Call
+        async function getNumber() {
+            const apiKey = document.getElementById('apiKey').value;
+            const rid = document.getElementById('ridInput').value;
+            const resultDiv = document.getElementById('numberResult');
+
+            if (!rid) {
+                alert('Please enter a Range ID (rid)');
+                return;
+            }
+
+            resultDiv.innerHTML = "Fetching number...";
+
+            try {
+                const response = await fetch(`${baseUrl}/getnum`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'mauthapi': apiKey
+                    },
+                    body: JSON.stringify({ rid: rid })
+                });
+
+                const data = await response.json();
+
+                if (data.meta.code === 200) {
+                    const num = data.data.full_number;
+                    resultDiv.innerHTML = `<span class="text-green-400 font-bold">Success:</span> ${num} (${data.data.country} - ${data.data.operator})`;
+                    
+                    // Auto copy number
+                    copyToClipboard(num, `Number ${num} copied automatically!`);
+
+                    // Add to allocated list
+                    allocatedNumbers.push({ number: data.data.no_plus_number, full: num, otp: 'Waiting for OTP...' });
+                    renderAllocatedList();
+                } else {
+                    resultDiv.innerHTML = `<span class="text-red-400">Error:</span> ${data.message || 'Out of stock'}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="text-red-400">Network Error</span>`;
+            }
+        }
+
+        // Render Allocated Numbers & Check OTPs
+        function renderAllocatedList() {
+            const listDiv = document.getElementById('allocatedList');
+            if (allocatedNumbers.length === 0) {
+                listDiv.innerHTML = `<p class="text-gray-500 text-sm">No numbers allocated yet.</p>`;
+                return;
+            }
+
+            listDiv.innerHTML = allocatedNumbers.map((item, index) => `
+                <div class="bg-gray-900 p-3 rounded flex justify-between items-center border border-gray-800">
+                    <div>
+                        <span class="text-white font-mono font-bold cursor-pointer hover:text-blue-400" onclick="copyToClipboard('${item.full}')">${item.full}</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs px-2 py-1 rounded bg-yellow-500/10 text-yellow-400 font-mono">${item.otp}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Fetch Success OTPs and Auto-update & Auto-copy OTP
+        async function fetchOTPs() {
+            const apiKey = document.getElementById('apiKey').value;
+            try {
+                const response = await fetch(`${baseUrl}/success-otp`, {
+                    headers: { 'mauthapi': apiKey }
+                });
+                const data = await response.json();
+                if (data.meta.code === 200 && data.data.otps) {
+                    data.data.otps.forEach(otpItem => {
+                        const target = allocatedNumbers.find(n => n.number === otpItem.number);
+                        if (target && target.otp !== otpItem.message) {
+                            target.otp = otpItem.message;
+                            // Auto copy OTP if new message arrives
+                            copyToClipboard(otpItem.message, `New OTP Auto-Copied: ${otpItem.message}`);
+                            renderAllocatedList();
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error("OTP fetch error", e);
+            }
+        }
+
+        // Fetch Global Console Feed
+        async function fetchConsole() {
+            const apiKey = document.getElementById('apiKey').value;
+            try {
+                const response = await fetch(`${baseUrl}/console`, {
+                    headers: { 'mauthapi': apiKey }
+                });
+                const data = await response.json();
+                const consoleDiv = document.getElementById('consoleFeed');
+                if (data.meta.code === 200 && data.data.hits) {
+                    consoleDiv.innerHTML = data.data.hits.map(hit => `
+                        <div class="border-b border-gray-800 pb-1">
+                            <span class="text-blue-400">[${hit.range}]</span> <span class="text-purple-400">${hit.sid}</span>: ${hit.message}
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error("Console fetch error", e);
+            }
+        }
+
+        // Background polling for real-time updates every 5 seconds
+        setInterval(() => {
+            fetchOTPs();
+            fetchConsole();
+        }, 5000);
+    </script>
+</body>
+</html>
