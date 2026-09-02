@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPRN — International Premium Network | Global Access Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        prime: '#0F172A',
+                        primeLight: '#1E293B',
+                        accent: '#3B82F6',
+                        accentAlt: '#8B5CF6',
+                        success: '#10B981',
+                        warn: '#F59E0B',
+                        danger: '#EF4444',
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        html { scroll-behavior: smooth; }
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: #F8FAFC;
+            overflow-x: hidden;
+        }
+        .glass {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .glass-light {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .text-gradient {
+            background: linear-gradient(90deg, #3B82F6, #8B5CF6, #10B981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-gradient {
+            background: linear-gradient(90deg, #3B82F6, #8B5CF6);
+            transition: all 0.3s ease;
+        }
+        .btn-gradient:hover {
+            box-shadow: 0 0 30px rgba(59,130,246,0.4);
+            transform: translateY(-2px);
+        }
+        .card-hover {
+            transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+        }
+        .card-hover:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px -12px rgba(59,130,246,0.25);
+            border-color: rgba(59,130,246,0.3);
+        }
+        .pulse-glow { animation: pulseGlow 2s infinite alternate; }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 15px rgba(59,130,246,0.3); }
+            100% { box-shadow: 0 0 35px rgba(59,130,246,0.6); }
+        }
+        .float { animation: float 6s ease-in-out infinite; }
+        @keyframes float {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .nav-link { position: relative; }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #3B82F6, #8B5CF6);
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after { width: 100%; }
+        input, select {
+            background: rgba(15,23,42,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+        .bg-grid {
+            background-image: 
+                linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .status-online { color: #10B981; }
+        .status-offline { color: #EF4444; }
+        .loader {
+            width: 24px; height: 24px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #3B82F6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-grid">
+
+<!-- Navigation -->
+<nav class="glass fixed top-0 left-0 w-full z-50 border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16 md:h-20">
+            <a href="#" class="flex items-center gap-2">
+                <div class="w-9 h-9 rounded-lg btn-gradient flex items-center justify-center font-bold text-xl">I</div>
+                <span class="text-xl font-bold tracking-tight">IPRN</span>
+            </a>
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#home" class="nav-link text-gray-300 hover:text-white">Home</a>
+                <a href="#services" class="nav-link text-gray-300 hover:text-white">Services</a>
+                <a href="#dashboard" class="nav-link text-gray-300 hover:text-white">Dashboard</a>
+                <a href="#api" class="nav-link text-gray-300 hover:text-white">API Console</a>
+                <a href="#docs" class="nav-link text-gray-300 hover:text-white">Docs</a>
+            </div>
+            <div class="hidden md:block">
+                <button id="connectBtn" class="btn-gradient px-5 py-2.5 rounded-xl font-semibold text-white">
+                    <i class="fa-solid fa-plug mr-2"></i>Connect
+                </button>
+            </div>
+            <button id="mobileMenuBtn" class="md:hidden text-2xl">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </div>
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="glass-light hidden md:hidden border-t border-white/5">
+        <div class="px-4 py-4 flex flex-col gap-4">
+            <a href="#home" class="text-gray-300 hover:text-white py-2">Home</a>
+            <a href="#services" class="text-gray-300 hover:text-white py-2">Services</a>
+            <a href="#dashboard" class="text-gray-300 hover:text-white py-2">Dashboard</a>
+            <a href="#api" class="text-gray-300 hover:text-white py-2">API Console</a>
+            <a href="#docs" class="text-gray-300 hover:text-white py-2">Docs</a>
+            <button class="btn-gradient px-5 py-2.5 rounded-xl font-semibold w-full">
+                <i class="fa-solid fa-plug mr-2"></i>Connect
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section id="home" class="min-h-screen flex items-center pt-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div class="fade-in">
+                <div class="inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-6">
+                    <span class="w-2.5 h-2.5 rounded-full bg-success animate-pulse"></span>
+                    <span class="text-sm font-medium">API Active — Ready to Connect</span>
+                </div>
+                <h1 class="text-5xl md:text-6xl font-black leading-tight mb-6">
+                    Global Access <br>
+                    <span class="text-gradient">Premium Network</span>
+                </h1>
+                <p class="text-xl text-gray-400 mb-8 leading-relaxed">
+                    IPRN — International Premium Reference Network. Enterprise-grade connectivity, real-time OTP delivery, live access & global number services.
+                </p>
+                <div class="flex flex-wrap gap-4 mb-10">
+                    <a href="#dashboard" class="btn-gradient px-8 py-3.5 rounded-xl font-bold text-lg">
+                        <i class="fa-solid fa-rocket mr-2"></i>Launch Platform
+                    </a>
+                    <a href="#docs" class="glass px-8 py-3.5 rounded-xl font-bold text-lg border border-white/10 hover:border-accent/50 transition">
+                        <i class="fa-solid fa-book mr-2"></i>Documentation
+                    </a>
+                </div>
+                <div class="grid grid-cols-3 gap-6">
+                    <div><div class="text-3xl font-bold text-accent">99.9%</div><div class="text-gray-500 text-sm">Uptime</div></div>
+                    <div><div class="text-3xl font-bold text-success">50+</div><div class="text-gray-500 text-sm">Countries</div></div>
+                    <div><div class="text-3xl font-bold text-accentAlt">∞</div><div class="text-gray-500 text-sm">Requests/Day</div></div>
+                </div>
+            </div>
+            <div class="relative float">
+                <div class="absolute inset-0 bg-accent/20 blur-3xl rounded-full"></div>
+                <div class="glass rounded-2xl p-6 relative border border-white/10 pulse-glow">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-3 h-3 rounded-full bg-danger"></div>
+                        <div class="w-3 h-3 rounded-full bg-warn"></div>
+                        <div class="w-3 h-3 rounded-full bg-success"></div>
+                        <span class="ml-auto text-xs text-gray-400 font-mono">IPRN Console v2.0</span>
+                    </div>
+                    <div class="space-y-4 font-mono text-sm">
+                        <div class="text-gray-400">$ api init --key=M8OSXY9XKQ3</div>
+                        <div class="text-success">✓ API Key Verified</div>
+                        <div class="text-accent">→ Connecting to api.2oo9.cloud...</div>
+                        <div class="text-success">✓ Connected — Live Access Granted</div>
+                        <div class="text-accent">→ GET /getnum → 200 OK</div>
+                        <div class="text-accent">→ POST /success-otp → 200 OK</div>
+                        <div class="text-gray-500 shimmer py-1 rounded">▓▓▓▓▓▓▓▓▓▓ 100% — Sync Complete</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section id="services" class="py-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold mb-4">Core <span class="text-gradient">Services</span></h2>
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto">Enterprise-grade endpoints designed for speed, security & reliability.</p>
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="glass-light rounded-2xl p-6 card-hover border border-white/5">
+                <i class="fa-solid fa-key text-3xl text-accent mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">API Gateway</h3>
+                <p class="text-gray-400 text-sm mb-4">Central authentication & routing layer for all requests.</p>
+                <span class="text-xs px-2 py-1 rounded-full bg-success/20 text-success">/api</span>
+            </div>
+            <div class="glass-light rounded-2xl p-6 card-hover border border-white/5">
+                <i class="fa-solid fa-hashtag text-3xl text-accentAlt mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">Get Number</h3>
+                <p class="text-gray-400 text-sm mb-4">Retrieve active virtual numbers from global pool.</p>
+                <span class="text-xs px-2 py-1 rounded-full bg-success/20 text-success">/getnum</span>
+            </div>
+            <div class="glass-light rounded-2xl p-6 card-hover border border-white/5">
+                <i class="fa-solid fa-shield-halved text-3xl text-success mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">Live Access</h3>
+                <p class="text-gray-400 text-sm mb-4">Establish secure live session & real-time control.</p>
+                <span class="text-xs px-2 py-1 rounded-full bg-success/20 text-success">/liveaccess</span>
+            </div>
+            <div class="glass-light rounded-2xl p-6 card-hover border border-white/5">
+                <i class="fa-solid fa-envelope-circle-check text-3xl text-warn mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">OTP Verification</h3>
+                <p class="text-gray-400 text-sm mb-4">Submit & verify OTP codes instantly via API.</p>
+                <span class="text-xs px-2 py-1 rounded-full bg-success/20 text-success">/success-otp</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Dashboard & API Console -->
+<section id="dashboard" class="py-24 bg-black/20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold mb-4">Control <span class="text-gradient">Center</span></h2>
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto">Integrate & manage all endpoints with your API key — <code class="bg-accent/20 px-2 py-1 rounded text-accent">M8OSXY9XKQ3</code></p>
+        </div>
+
+        <!-- Status Cards -->
+        <div class="grid md:grid-cols-4 gap-5 mb-10">
+            <div class="glass rounded-xl p-5 border border-white/5">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-gray-400 text-sm">API Status</span>
+                    <span id="apiStatus" class="w-3 h-3 rounded-full bg-gray-500"></span>
+                </div>
+                <div class="text-2xl font-bold">Checking...</div>
+            </div>
+            <div class="glass rounded-xl p-5 border border-white/5">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-gray-400 text-sm">Numbers Active</span>
+                    <i class="fa-solid fa-hashtag text-accent"></i>
+                </div>
+                <div id="numCount" class="text-2xl font-bold">—</div>
+            </div>
+            <div class="glass rounded-xl p-5 border border-white/5">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-gray-400 text-sm">Requests Today</span>
+                    <i class="fa-solid fa-paper-plane text-success"></i>
+                </div>
+                <div class="text-2xl font-bold">1,247</div>
+            </div>
+            <div class="glass rounded-xl p-5 border border-white/5">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-gray-400 text-sm">Server Load</span>
+                    <i class="fa-solid fa-server text-warn"></i>
+                </div>
+                <div class="text-2xl font-bold">24.8%</div>
+            </div>
+        </div>
+
+        <!-- API Console -->
+        <section id="api" class="glass rounded-2xl border border-white/10 overflow-hidden">
+            <div class="bg-primeLight px-6 py-4 border-b border-white/5 flex items-center justify-between">
+                <h3 class="text-xl font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-accent"></i> API Console
+                </h3>
+                <div class="flex items-center gap-3">
+                    <button id="clearLog" class="text-sm text-gray-400 hover:text-white transition">
+                        <i class="fa-solid fa-eraser mr-1"></i> Clear
+                    </button>
+                    <button id="copyCurl" class="text-sm text-gray-400 hover:text-white transition">
+                        <i class="fa-solid fa-copy mr-1"></i> cURL
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <!-- Config -->
+                <div class="grid md:grid-cols-2 gap-5 mb-6">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">API Key</label>
+                        <input id="apiKey" type="text" value="M8OSXY9XKQ3" class="w-full px-4 py-3 rounded-lg text-white font-mono text-sm" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Base URL</label>
+                        <input id="baseUrl" type="text" value="https://api.2oo9.cloud/MXS47FLFX0U/tness/@public/api" class="w-full px-4 py-3 rounded-lg text-white font-mono text-sm">
+                    </div>
+                </div>
+
+                <!-- Endpoint Selector -->
+                <div class="grid md:grid-cols-3 gap-5 mb-6">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Endpoint</label>
+                        <select id="endpoint" class="w-full px-4 py-3 rounded-lg text-white">
+                            <option value="">— Select Endpoint —</option>
+                            <option value="/getnum">GET /getnum — Fetch Number</option>
+                            <option value="/liveaccess">POST /liveaccess — Start Session</option>
+                            <option value="/success-otp">POST /success-otp — Submit OTP</option>
+                            <option value="/console">GET /console — Console Data</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Method</label>
+                        <select id="method" class="w-full px-4 py-3 rounded-lg text-white">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">&nbsp;</label>
+                        <button id="sendReq" class="w-full btn-gradient px-4 py-3 rounded-lg font-semibold">
+                            <i class="fa-solid fa-paper-plane mr-2"></i>Send Request
+                        </button>
+                    </div>
+                </div>
+
+                <!-- OTP Input (conditional) -->
+                <div id="otpField" class="hidden mb-6">
+                    <label class="block text-sm text-gray-400 mb-2">OTP Code</label>
+                    <div class="flex gap-3">
+                        <input id="otpInput" type="text" placeholder="Enter OTP..." class="flex-1 px-4 py-3 rounded-lg text-white font-mono text-lg tracking-widest">
+                        <button id="submitOtp" class="btn-gradient px-6 py-3 rounded-lg font-semibold">Verify</button>
+                    </div>
+                </div>
+
+                <!-- Response Output -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-sm font-semibold text-gray-300">Response</h4>
+                        <span id="resStatus" class="text-sm text-gray-500">—</span>
+                    </div>
+                    <div id="response" class="bg-black/40 rounded-lg p-4 font-mono text-sm text-green-400 min-h-[180px] overflow-auto whitespace-pre-wrap border border-white/5">
+<span class="text-gray-500">// Waiting for request...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Documentation -->
+        <section id="docs" class="mt-16">
+            <h3 class="text-3xl font-bold mb-6">API <span class="text-gradient">Documentation</span></h3>
+            <div class="glass rounded-2xl p-6 border border-white/5 space-y-6 font-mono text-sm">
+                <div>
+                    <h4 class="text-lg font-semibold text-accent mb-2">Base URL</h4>
+                    <code class="block bg-black/30 p-3 rounded text-green-400">https://api.2oo9.cloud/MXS47FLFX0U/tness/@public/api</code>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-accent mb-2">Headers</h4>
+                    <pre class="bg-black/30 p-3 rounded text-gray-300">X-API-Key: M8OSXY9XKQ3
+Content-Type: application/json
+Accept: application/json</pre>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-accent mb-2">Endpoints</h4>
+                    <pre class="bg-black/30 p-3 rounded text-gray-300">GET  /getnum        → Retrieve available numbers
+POST /liveaccess     → Initialize live session
+POST /success-otp    → Submit & verify OTP
+GET  /console        → Retrieve console/account data</pre>
+                </div>
+            </div>
+        </section>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="glass-light border-t border-white/5 py-12 mt-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div class="text-2xl font-bold mb-4">IPRN — International Premium Reference Network</div>
+        <p class="text-gray-500 mb-6">Secure • Fast • Global • Reliable</p>
+        <div class="flex justify-center gap-6 text-gray-400 mb-8">
+            <a href="#" class="hover:text-white transition">Terms</a>
+            <a href="#" class="hover:text-white transition">Privacy</a>
+            <a href="#" class="hover:text-white transition">Status</a>
+            <a href="#" class="hover:text-white transition">Support</a>
+        </div>
+        <p class="text-gray-600 text-sm">© 2025 IPRN Platform. All rights reserved.</p>
+    </div>
+</footer>
+
+<!-- JavaScript -->
+<script>
+const API_KEY = 'M8OSXY9XKQ3';
+const BASE_URL = 'https://api.2oo9.cloud/MXS47FLFX0U/tness/@public/api';
+
+// DOM Elements
+const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+const endpoint = document.getElementById('endpoint');
+const method = document.getElementById('method');
+const sendReq = document.getElementById('sendReq');
+const response = document.getElementById('response');
+const resStatus = document.getElementById('resStatus');
+const otpField = document.getElementById('otpField');
+const clearLog = document.getElementById('clearLog');
+const apiStatus = document.getElementById('apiStatus');
+
+// Mobile Menu Toggle
+mobileMenuBtn.addEventListener('click', () => {
+    mobileMenu.classList.toggle('hidden');
+    mobileMenuBtn.innerHTML = mobileMenu.classList.contains('hidden') 
+        ? '<i class="fa-solid fa-bars"></i>' 
+        : '<i class="fa-solid fa-xmark"></i>';
+});
+
+// Show/hide OTP field based on endpoint
+endpoint.addEventListener('change', () => {
+    otpField.classList.toggle('hidden', endpoint.value !== '/success-otp');
+    method.value = endpoint.value === '/getnum' || endpoint.value === '/console' ? 'GET' : 'POST';
+});
+
+// Clear Log
+clearLog.addEventListener('click', () => {
+    response.innerHTML = '<span class="text-gray-500">// Log cleared. Waiting for request...</span>';
+    resStatus.textContent = '—';
+    resStatus.className = 'text-sm text-gray-500';
+});
+
+// Send Request
+sendReq.addEventListener('click', async () => {
+    const selected = endpoint.value;
+    if (!selected) {
+        response.innerHTML = '<span class="text-yellow-400">⚠️ Please select an endpoint first!</span>';
+        return;
+    }
+
+    const url = BASE_URL + selected;
+    const reqMethod = method.value;
+    const otpCode = document.getElementById('otpInput').value;
+
+    response.innerHTML = '<span class="text-accent">⟳ Sending request...</span>';
+    resStatus.textContent = 'Pending...';
+    resStatus.className = 'text-sm text-warn';
+    sendReq.disabled = true;
+    sendReq.innerHTML = '<div class="loader mx-auto"></div>';
+
+    const startTime = Date.now();
+
+    try {
+        const headers = {
+            'X-API-Key': API_KEY,
+            'Content-Type': 'application/json'
+        };
+        const body = (selected === '/success-otp' && otpCode) 
+            ? JSON.stringify({ otp: otpCode }) 
+            : (reqMethod === 'POST' ? JSON.stringify({}) : undefined);
+
+        const res = await fetch(url, {
+            method: reqMethod,
+            headers,
+            body
+        });
+
+        const timeTaken = Date.now() - startTime;
+        resStatus.textContent = `${res.status} — ${timeTaken}ms`;
+        resStatus.className = `text-sm ${res.ok ? 'text-success' : 'text-danger'}`;
+
+        const text = await res.text();
+        let formatted = text;
+        try {
+            const json = JSON.parse(text);
+            formatted = JSON.stringify(json, null, 2);
+        } catch {}
+
+        response.innerHTML = `<span class="text-gray-500">// ${reqMethod} ${url} → ${res.status}</span>\n${
+            res.ok ? `<span class="text-success">${formatted}</span>` : `<span class="text-danger">${formatted}</span>`
+        }`;
+
+        apiStatus.className = `w-3 h-3 rounded-full ${res.ok ? 'bg-success' : 'bg-warn'}`;
+
+    } catch (err) {
+        resStatus.textContent = 'Network Error';
+        resStatus.className = 'text-sm text-danger';
+        response.innerHTML = `<span class="text-danger">✗ Request failed!</span>\n<span class="text-red-300">Error: ${err.message}</span>\n\n<span class="text-yellow-400 text-sm">⚠️ Note: The API endpoint may be currently unreachable ("link dead" or "fetch error"). Verify the URL is active.</span>`;
+        apiStatus.className = 'w-3 h-3 rounded-full bg-danger';
+    } finally {
+        sendReq.disabled = false;
+        sendReq.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i>Send Request';
+    }
+});
+
+// Check API on load
+window.addEventListener('load', () => {
+    apiStatus.className = 'w-3 h-3 rounded-full bg-gray-500';
+    setTimeout(() => {
+        response.innerHTML = '<span class="text-gray-500">// System ready. Select an endpoint and click Send Request.</span>';
+    }, 800);
+});
+</script>
+
+</body>
+</html>
