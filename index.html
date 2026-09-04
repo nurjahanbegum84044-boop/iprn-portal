@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MNIT Style SMS & Number Manager</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen font-sans pb-10">
+
+    <!-- Top Navigation / Header -->
+    <div class="bg-white border-b shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-2">
+                <span class="bg-blue-600 text-white font-black px-3 py-1 rounded-lg text-lg">MNIT</span>
+                <span class="font-bold text-gray-700">Network SMS Portal</span>
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-file-excel"></i> এক্সেল ডাউনলোড
+                </button>
+                <button onclick="clearLocalStorageData()" class="bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1.5 rounded-lg text-sm font-medium" title="রিসেট">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto p-4 max-w-3xl">
+        
+        <!-- Get Number Control Box -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-6">
+            <h2 class="font-bold text-gray-700 mb-3 text-sm uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-mobile-screen-button text-blue-600"></i> নতুন নাম্বার জেনারেট করুন
+            </h2>
+            <div class="flex gap-2">
+                <input type="text" id="pinInput" placeholder="റേঞ্জ ডিজিট দিন (যেমন: 26134)" class="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="fetchNumber()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl text-sm shadow transition">
+                    জেনারেট
+                </button>
+            </div>
+        </div>
+
+        <!-- Real-time Feed Header info -->
+        <div class="flex justify-between items-center mb-4 px-1">
+            <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider">
+                <i class="fa-solid fa-circle text-emerald-500 text-[8px] animate-pulse"></i> Real-time SMS & Numbers (Permanent)
+            </span>
+            <span id="totalCount" class="text-xs bg-gray-200 text-gray-700 px-2.5 py-1 rounded-full font-bold">মোট: ০</span>
+        </div>
+
+        <!-- Cards Container (MNIT Style) -->
+        <div id="cardsContainer" class="space-y-4">
+            <!-- Dynamic Cards will be inserted here -->
+        </div>
+
+    </div>
+
+    <script>
+        const API_BASE = "https://api.2oo9.cloud/MXS47FLFX0U/tness/@public/api/";
+        const API_KEY = "M8OSXY9XKQ3";
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadCards();
+            fetchSuccessfulOTPs();
+        });
+
+        async function fetchNumber() {
+            const pin = document.getElementById('pinInput').value.trim();
+            if (!pin) {
+                alert("দয়া করে রেঞ্জ ডিজিট দিন (যেমন: 26134)");
+                return;
+            }
+
+            try {
+                let response = await fetch(`${API_BASE}getnum`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'mauthapi': API_KEY
+                    },
+                    body: JSON.stringify({ rid: pin })
+                });
+
+                let result = await response.json();
+                
+                if (result.meta && result.meta.code === 200) {
+                    const dataObj = {
+                        id: 'item_' + Date.now(),
+                        time: new Date().toLocaleTimeString(),
+                        full_number: result.data.full_number || 'N/A',
+                        country: (result.data.country || 'UNKNOWN').toUpperCase(),
+                        operator: result.data.operator || 'SUCCESS',
+                        message: 'Waiting for OTP...'
+                    };
+
+                    saveToLocalStorage(dataObj);
+                    loadCards();
+                    
+                    // Auto copy number and trigger clipboard
+                    copyToClipboard(dataObj.full_number);
+                } else {
+                    let msg = result.meta?.code === 2946 ? "আউট অব স্টক (Out of stock)" : "নাম্বার পাওয়া যায়নি";
+                    alert(msg);
+                }
+            } catch (error) {
+                console.error("API Error:", error);
+                alert("কানেকশন এরর হয়েছে।");
+            }
+        }
+
+        async function fetchSuccessfulOTPs() {
+            try {
+                let response = await fetch(`${API_BASE}success-otp`, {
+                    method: 'GET',
+                    headers: { 'mauthapi': API_KEY }
+                });
+                let result = await response.json();
+                if(result.meta && result.meta.code === 200 && result.data.otps) {
+                    let otps = result.data.otps;
+                    let savedData = JSON.parse(localStorage.getItem('mnit_permanent_data')) || [];
+                    let updated = false;
+
+                    otps.forEach(otp => {
+                        let found = savedData.find(item => item.full_number.includes(otp.number));
+                        if(found && found.message !== otp.message) {
+                            found.message = otp.message;
+                            updated = true;
+                            copyToClipboard(otp.message); // Auto copy OTP when arrives
+                        }
+                    });
+
+                    if(updated) {
+                        localStorage.setItem('mnit_permanent_data', JSON.stringify(savedData));
+                        loadCards();
+                    }
+                }
+            } catch(e) {
+                console.error("OTP Sync Error", e);
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                console.log("Auto-copied:", text);
+            });
+        }
+
+        function saveToLocalStorage(newItem) {
+            let savedData = JSON.parse(localStorage.getItem('mnit_permanent_data')) || [];
+            savedData.unshift(newItem); // New item on top
+            localStorage.setItem('mnit_permanent_data', JSON.stringify(savedData));
+        }
+
+        function loadCards() {
+            let savedData = JSON.parse(localStorage.getItem('mnit_permanent_data')) || [];
+            let container = document.getElementById('cardsContainer');
+            let totalCount = document.getElementById('totalCount');
+            container.innerHTML = "";
+            totalCount.innerText = `মোট: ${savedData.length}`;
+
+            if (savedData.length === 0) {
+                container.innerHTML = `<div class="bg-white p-6 rounded-2xl text-center text-gray-400 border border-gray-200">কোনো ডাটা সংরক্ষিত নেই। উপর থেকে নাম্বার জেনারেট করুন।</div>`;
+                return;
+            }
+
+            savedData.forEach(item => {
+                let card = `
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 space-y-3 transition hover:shadow-md">
+                        <div class="flex justify-between items-center text-xs text-gray-400">
+                            <span>${item.time}</span>
+                            <span class="bg-indigo-600 text-white px-3 py-1 rounded-full text-[11px] font-bold tracking-wider">${item.country}</span>
+                        </div>
+                        
+                        <!-- Number Row -->
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-lg text-gray-800 select-all tracking-wide">${item.full_number}</span>
+                            <button onclick="copyToClipboard('${item.full_number}'); alert('নাম্বার কপি হয়েছে: ${item.full_number}');" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1 transition">
+                                <i class="fa-regular fa-copy"></i> কপি
+                            </button>
+                        </div>
+
+                        <!-- Status & OTP Box -->
+                        <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
+                            <span class="bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-md text-xs font-bold">success</span>
+                            <div class="flex-1 bg-cyan-50 border border-cyan-100 px-3 py-1.5 rounded-xl flex justify-between items-center text-cyan-900 text-sm font-semibold">
+                                <span class="select-all">${item.message}</span>
+                                <button onclick="copyToClipboard('${item.message}'); alert('ওটিপি কপি হয়েছে!');" class="text-cyan-600 hover:text-cyan-800 text-xs ml-2">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
+
+        function exportToExcel() {
+            let savedData = JSON.parse(localStorage.getItem('mnit_permanent_data')) || [];
+            if (savedData.length === 0) {
+                alert("এক্সপোর্ট করার মতো কোনো ডাটা নেই!");
+                return;
+            }
+            let worksheet = XLSX.utils.json_to_sheet(savedData);
+            let workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "MNIT_SMS_Data");
+            XLSX.writeFile(workbook, "MNIT_Network_Data.xlsx");
+        }
+
+        function clearLocalStorageData() {
+            if (confirm("আপনি কি নিশ্চিত সব ডাটা মুছে ফেলতে চান?")) {
+                localStorage.removeItem('mnit_permanent_data');
+                loadCards();
+            }
+        }
+
+        // Auto background sync for OTPs every 10 seconds
+        setInterval(fetchSuccessfulOTPs, 10000);
+    </script>
+</body>
+</html>
