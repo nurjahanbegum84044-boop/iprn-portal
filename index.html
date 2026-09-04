@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MNIT Network Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom toggle switch styling */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #6366f1;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #6366f1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen font-sans pb-12">
+
+    <!-- Top Action Bar for Permanent Storage & Excel Download -->
+    <div class="bg-white border-b shadow-sm sticky top-0 z-50 px-4 py-2.5">
+        <div class="container mx-auto flex justify-between items-center max-w-xl">
+            <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">
+                <i class="fa-solid fa-database text-emerald-500"></i> Permanent Storage
+            </span>
+            <div class="flex items-center gap-2">
+                <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow transition">
+                    <i class="fa-solid fa-file-excel"></i> এক্সেল ডাউনলোড
+                </button>
+                <button onclick="clearLocalStorageData()" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1.5 rounded-lg text-xs font-medium transition" title="রিসেট">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto p-4 max-w-xl space-y-6">
+        
+        <!-- Number Range Card (Exact MNIT Style) -->
+        <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-200">
+            <h2 class="text-sm font-bold text-gray-700 mb-3 tracking-wide">Number Range</h2>
+            
+            <div class="mb-4">
+                <input type="text" id="pinInput" placeholder="232761XXX" class="w-full bg-white border border-gray-300 rounded-2xl px-4 py-3 text-gray-800 font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+            </div>
+
+            <!-- Toggles: National & Remove Plus -->
+            <div class="flex items-center justify-between mb-5 px-1">
+                <label class="flex items-center cursor-pointer gap-2 select-none">
+                    <div class="relative">
+                        <input type="checkbox" id="nationalToggle" class="sr-only toggle-checkbox">
+                        <div class="block bg-gray-300 w-10 h-6 rounded-full toggle-label transition"></div>
+                    </div>
+                    <span class="text-xs font-medium text-gray-600">National</span>
+                </label>
+
+                <label class="flex items-center cursor-pointer gap-2 select-none">
+                    <div class="relative">
+                        <input type="checkbox" id="removePlusToggle" class="sr-only toggle-checkbox">
+                        <div class="block bg-gray-300 w-10 h-6 rounded-full toggle-label transition"></div>
+                    </div>
+                    <span class="text-xs font-medium text-gray-600">Remove Plus</span>
+                </label>
+            </div>
+
+            <!-- Action Button Row -->
+            <div class="flex items-center gap-3">
+                <div class="border border-gray-300 rounded-2xl p-3 flex items-center justify-center text-gray-600">
+                    <i class="fa-solid fa-mobile-screen text-lg"></i>
+                </div>
+                <button onclick="fetchNumber()" class="flex-1 bg-[#6366f1] hover:bg-[#4f46e5] text-white font-semibold py-3 px-6 rounded-2xl shadow-lg shadow-indigo-500/25 transition text-sm flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-paper-plane text-xs"></i> Get Numbers
+                </button>
+            </div>
+        </div>
+
+        <!-- Table Headers info like MNIT -->
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="grid grid-cols-3 p-4 border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider text-center">
+                <div class="text-left flex items-center gap-1.5"><i class="fa-solid fa-mobile-screen"></i> Phone Number</div>
+                <div><i class="fa-solid fa-globe"></i> Country</div>
+                <div class="text-right"><i class="fa-regular fa-clock"></i> Last Activity</div>
+            </div>
+
+            <!-- Data List Container -->
+            <div id="cardsContainer" class="divide-y divide-gray-100">
+                <!-- Dynamic Items will load here -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900/90 text-white px-5 py-3 rounded-2xl shadow-2xl text-xs font-medium tracking-wide flex items-center gap-3 opacity-0 pointer-events-none transition-all duration-300 z-50 backdrop-blur">
+        <div class="bg-emerald-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px]">
+            <i class="fa-solid fa-check"></i>
+        </div>
+        <span id="toastText">Copied to clipboard.</span>
+    </div>
+
+    <script>
+        const API_BASE = "https://api.2oo9.cloud/MXS47FLFX0U/tness/@public/api/";
+        const API_KEY = "M8OSXY9XKQ3";
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadCards();
+            fetchSuccessfulOTPs();
+        });
+
+        async function fetchNumber() {
+            let pinInputVal = document.getElementById('pinInput').value.trim();
+            if (!pinInputVal) {
+                showToast("দয়া করে নাম্বার রেঞ্জ দিন (যেমন: 232761)");
+                return;
+            }
+
+            // Remove XXX if user typed it
+            let rid = pinInputVal.replace(/XXX/gi, "").trim();
+
+            try {
+                let response = await fetch(`${API_BASE}getnum`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'mauthapi': API_KEY
+                    },
+                    body: JSON.stringify({ rid: rid })
+                });
+
+                let result = await response.json();
+                
+                if (result.meta && result.meta.code === 200) {
+                    let rawNumber = result.data.full_number || '';
+                    
+                    // Apply toggles
+                    if(document.getElementById('nationalToggle').checked) {
+                        rawNumber = result.data.national_number || rawNumber;
+                    }
+                    if(document.getElementById('removePlusToggle').checked) {
+                        rawNumber = rawNumber.replace(/^\+/, '');
+                    }
+
+                    const dataObj = {
+                        id: 'item_' + Date.now(),
+                        time: 'Just now',
+                        timestamp: Date.now(),
+                        full_number: rawNumber,
+                        country: (result.data.country || 'UNKNOWN').toUpperCase(),
+                        operator: result.data.operator || 'success',
+                        message: 'Waiting for OTP...'
+                    };
+
+                    saveToLocalStorage(dataObj);
+                    loadCards();
+                    
+                    // Auto copy number and show custom toast
+                    copyToClipboard(dataObj.full_number);
+                    showToast(`Number copied: ${dataObj.full_number}`);
+                } else {
+                    let msg = result.meta?.code === 2946 ? "Out of stock!" : "Number not found!";
+                    showToast(msg);
+                }
+            } catch (error) {
+                console.error("API Error:", error);
+                showToast("Connection error!");
+            }
+        }
+
+        async function fetchSuccessfulOTPs() {
+            try {
+                let response = await fetch(`${API_BASE}success-otp`, {
+                    method: 'GET',
+                    headers: { 'mauthapi': API_KEY }
+                });
+                let result = await response.json();
+                if(result.meta && result.meta.code === 200 && result.data.otps) {
+                    let otps = result.data.otps;
+                    let savedData = JSON.parse(localStorage.getItem('mnit_exact_data')) || [];
+                    let updated = false;
+
+                    otps.forEach(otp => {
+                        let found = savedData.find(item => item.full_number.includes(otp.number));
+                        if(found && found.message !== otp.message) {
+                            found.message = otp.message;
+                            found.operator = "success";
+                            updated = true;
+                            copyToClipboard(otp.message); // Auto copy OTP when it arrives
+                            showToast(`OTP Received & Copied!`);
+                        }
+                    });
+
+                    if(updated) {
+                        localStorage.setItem('mnit_exact_data', JSON.stringify(savedData));
+                        loadCards();
+                    }
+                }
+            } catch(e) {
+                console.error("OTP Sync Error", e);
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                console.log("Copied:", text);
+            });
+        }
+
+        function showToast(text) {
+            let toast = document.getElementById('toast');
+            let toastText = document.getElementById('toastText');
+            toastText.innerText = text;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        function saveToLocalStorage(newItem) {
+            let savedData = JSON.parse(localStorage.getItem('mnit_exact_data')) || [];
+            savedData.unshift(newItem); // New on top
+            localStorage.setItem('mnit_exact_data', JSON.stringify(savedData));
+        }
+
+        function loadCards() {
+            let savedData = JSON.parse(localStorage.getItem('mnit_exact_data')) || [];
+            let container = document.getElementById('cardsContainer');
+            container.innerHTML = "";
+
+            if (savedData.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-gray-400 text-xs">কোনো ডাটা সংরক্ষিত নেই।</div>`;
+                return;
+            }
+
+            savedData.forEach(item => {
+                // Extract OTP Code if message contains code
+                let displayMsg = item.message;
+                let isPending = displayMsg.includes("Waiting");
+
+                let row = `
+                    <div class="p-4 transition hover:bg-gray-50/80">
+                        <div class="grid grid-cols-3 items-center text-sm">
+                            <!-- Left: Number & Status -->
+                            <div class="text-left space-y-1.5">
+                                <span class="font-bold text-gray-900 tracking-wide select-all text-sm block">${item.full_number}</span>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${isPending ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}">${isPending ? 'pending' : 'success'}</span>
+                                </div>
+                            </div>
+
+                            <!-- Center: Country Badge -->
+                            <div class="text-center">
+                                <span class="bg-[#5856d6] text-white px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider inline-block shadow-sm">${item.country}</span>
+                            </div>
+
+                            <!-- Right: Time -->
+                            <div class="text-right text-xs text-gray-400 font-medium">
+                                ${item.time}
+                            </div>
+                        </div>
+
+                        <!-- OTP Box Below Number if present -->
+                        <div class="mt-2.5 flex items-center gap-2">
+                            <div class="flex-1 bg-cyan-50/60 border border-cyan-100/80 px-3 py-2 rounded-xl flex justify-between items-center text-cyan-900 text-xs font-semibold">
+                                <span class="select-all truncate">${displayMsg}</span>
+                                <button onclick="copyToClipboard('${displayMsg}'); showToast('Copied to clipboard');" class="text-cyan-600 hover:text-cyan-800 ml-2 shrink-0">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                            <button onclick="copyToClipboard('${item.full_number}'); showToast('Number copied');" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-2 rounded-xl text-xs font-medium flex items-center gap-1 transition shrink-0">
+                                <i class="fa-regular fa-copy"></i> কপি
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += row;
+            });
+        }
+
+        function exportToExcel() {
+            let savedData = JSON.parse(localStorage.getItem('mnit_exact_data')) || [];
+            if (savedData.length === 0) {
+                showToast("এক্সপোর্ট করার মতো কোনো ডাটা নেই!");
+                return;
+            }
+            let worksheet = XLSX.utils.json_to_sheet(savedData);
+            let workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "MNIT_Dashboard_Data");
+            XLSX.writeFile(workbook, "MNIT_Network_Report.xlsx");
+        }
+
+        function clearLocalStorageData() {
+            if (confirm("সব ডাটা মুছে ফেলতে চান?")) {
+                localStorage.removeItem('mnit_exact_data');
+                loadCards();
+                showToast("ডেটাবেজ রিসেট করা হয়েছে");
+            }
+        }
+
+        // Auto background check for OTPs every 10 seconds
+        setInterval(fetchSuccessfulOTPs, 10000);
+    </script>
+</body>
+</html>
