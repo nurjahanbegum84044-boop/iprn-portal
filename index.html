@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StexSMS Manager - Permanent Storage & Excel Export</title>
+    <!-- Tailwind CSS for modern UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+
+    <div class="container mx-auto p-4 max-w-5xl">
+        <header class="bg-blue-600 text-white p-6 rounded-lg shadow-md mb-6 flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">StexSMS Number & OTP Manager</h1>
+                <p class="text-sm opacity-90">API Key & Permanent Local Database Integrated</p>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <button onclick="exportToExcel()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold shadow transition">
+                    📥 এক্সেল ফাইলে ডাউনলোড করুন
+                </button>
+            </div>
+        </header>
+
+        <!-- Control Panel -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">API Key:</label>
+                <input type="text" id="apiKey" value="M8OSXY9XKQ3" class="w-full border rounded px-3 py-2 bg-gray-50 text-gray-700" readonly>
+            </div>
+            <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">Range / Digits (e.g. 26124):</label>
+                <input type="text" id="pinInput" placeholder="26124" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <button onclick="fetchNumber()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition">
+                    নাম্বার নিন (Get Number)
+                </button>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+                <h2 class="font-bold text-gray-700">সংরক্ষিত নাম্বার ও ওটিপি লিস্ট (কখনো ডিলিট হবে না)</h2>
+                <button onclick="clearLocalStorageData()" class="text-red-500 text-sm hover:underline">সব ডাটা রিসেট করুন</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-700 text-sm">
+                            <th class="p-3 border-b">তারিখ ও সময়</th>
+                            <th class="p-3 border-b">ফুল নাম্বার</th>
+                            <th class="p-3 border-b">কান্ট্রি</th>
+                            <th class="p-3 border-b">অপারেটর</th>
+                            <th class="p-3 border-b">ওটিপি / মেসেজ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody" class="text-sm text-gray-600">
+                        <!-- Data will be dynamically loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "https://api.2co9.cloud/M8OSXY9XKQ3/tness/public/api/";
+
+        // Page load hone sathe sathe localstorage theke data load korbe
+        document.addEventListener("DOMContentLoaded", () => {
+            loadTableData();
+        });
+
+        async function fetchNumber() {
+            const pin = document.getElementById('pinInput').value.trim();
+            if (!pin) {
+                alert("দয়া করে রেঞ্জ বা ডিজিট দিন (যেমন: 26124)");
+                return;
+            }
+
+            try {
+                let response = await fetch(`${API_BASE}getnum`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': 'M8OSXY9XKQ3'
+                    },
+                    body: JSON.stringify({ pin: pin })
+                });
+
+                let result = await response.json();
+                
+                if (result.meta && result.meta.code === 200) {
+                    const dataObj = {
+                        time: new Date().toLocaleString(),
+                        full_number: result.data.full_number || 'N/A',
+                        country: result.data.country || 'N/A',
+                        operator: result.data.operator || 'N/A',
+                        message: result.data.message || 'Waiting for OTP...'
+                    };
+
+                    saveToLocalStorage(dataObj);
+                    loadTableData();
+                    alert("সফলভাবে নাম্বার বরাদ্দ করা হয়েছে!");
+                } else {
+                    alert("এরর: " + (result.meta?.message || "কিছু ভুল হয়েছে"));
+                }
+            } catch (error) {
+                console.error("API Error:", error);
+                alert("এপিআই কানেকশনে সমস্যা হয়েছে। কনসোল চেক করুন।");
+            }
+        }
+
+        // Permanent LocalStorage Functions
+        function saveToLocalStorage(newItem) {
+            let savedData = JSON.parse(localStorage.getItem('stexsms_permanent_data')) || [];
+            savedData.unshift(newItem); // Notun data upore add hobe
+            localStorage.setItem('stexsms_permanent_data', JSON.stringify(savedData));
+        }
+
+        function loadTableData() {
+            let savedData = JSON.parse(localStorage.getItem('stexsms_permanent_data')) || [];
+            let tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = "";
+
+            if (savedData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">কোনো ডাটা সংরক্ষিত নেই।</td></tr>`;
+                return;
+            }
+
+            savedData.forEach(item => {
+                let row = `<tr class="border-b hover:bg-gray-50">
+                    <td class="p-3">${item.time}</td>
+                    <td class="p-3 font-semibold text-blue-600">${item.full_number}</td>
+                    <td class="p-3">${item.country}</td>
+                    <td class="p-3">${item.operator}</td>
+                    <td class="p-3 text-green-600 font-medium">${item.message}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Excel Export Function using SheetJS
+        function exportToExcel() {
+            let savedData = JSON.parse(localStorage.getItem('stexsms_permanent_data')) || [];
+            if (savedData.length === 0) {
+                alert("ডাউনলোড করার মতো কোনো ডাটা নেই!");
+                return;
+            }
+
+            let worksheet = XLSX.utils.json_to_sheet(savedData);
+            let workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Numbers & OTP");
+
+            // Download Excel file
+            XLSX.writeFile(workbook, "StexSMS_Data.xlsx");
+        }
+
+        function clearLocalStorageData() {
+            if (confirm("আপনি কি নিশ্চিত যে সব ডাটা মুছে ফেলতে চান? (যদিও ব্রাউজার থেকে ম্যানুয়ালি না মুছলে এগুলো আজীবন সুরক্ষিত থাকে)")) {
+                localStorage.removeItem('stexsms_permanent_data');
+                loadTableData();
+            }
+        }
+    </script>
+</body>
+</html>
