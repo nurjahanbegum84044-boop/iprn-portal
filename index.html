@@ -1,0 +1,906 @@
+```html
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AccountMarket Pro - Premium Account Submission & Management Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#090d16',
+                        cardBg: '#111827',
+                        cardHover: '#1f2937',
+                        neonIndigo: '#6366f1',
+                        neonEmerald: '#10b981',
+                        neonPurple: '#a855f7',
+                        neonPink: '#ec4899',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-6px)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 15px rgba(99, 102, 241, 0.3)' },
+                            '100%': { boxShadow: '0 0 30px rgba(99, 102, 241, 0.7)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #090d16; color: #f3f4f6; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0b0f19; }
+        ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #374151; }
+        .glass-panel { background: rgba(17, 24, 39, 0.75); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-input { background: rgba(3, 7, 18, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-input:focus { border-color: #6366f1; box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); outline: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-50 glass-panel border-b border-gray-800/80 px-4 lg:px-8 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dashboard')">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 animate-pulse-slow">
+                <i class="fa-solid fa-shield-halved text-white text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-xl tracking-wide bg-gradient-to-r from-white via-indigo-200 to-indigo-400 bg-clip-text text-transparent">AccountMarket Pro</h1>
+                <p class="text-xs text-gray-400">Secure B2B & Retail Account Exchange</p>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs & Mode Switcher -->
+        <div class="flex items-center space-x-2 md:space-x-4">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
+                <i class="fa-solid fa-chart-pie mr-2"></i>Dashboard
+            </button>
+            <button onclick="switchTab('submit')" id="nav-submit" class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 text-gray-300 hover:bg-gray-800 hover:text-white">
+                <i class="fa-solid fa-plus-circle mr-2"></i>Submit Account
+            </button>
+            <button onclick="switchTab('withdraw')" id="nav-withdraw" class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 text-gray-300 hover:bg-gray-800 hover:text-white">
+                <i class="fa-solid fa-wallet mr-2"></i>Withdrawal
+            </button>
+            <button onclick="toggleAdminPanel()" id="nav-admin" class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-950/40">
+                <i class="fa-solid fa-user-shield mr-2"></i><span id="admin-btn-text">Admin Panel</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-8">
+
+        <!-- Notification Banner / Toast Container -->
+        <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+        <!-- ==================== TAB 1: USER DASHBOARD ==================== -->
+        <section id="tab-dashboard" class="space-y-8 animate-fadeIn">
+            <!-- Welcome Banner & Quick Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:border-indigo-500/50 transition-all duration-300">
+                    <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-indigo-600/10 rounded-full blur-xl group-hover:bg-indigo-600/25 transition-all"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-sm font-medium text-gray-400">Total Submitted</span>
+                        <div class="p-3 bg-indigo-500/10 rounded-xl text-indigo-400"><i class="fa-solid fa-box-archive text-lg"></i></div>
+                    </div>
+                    <h3 id="stat-total" class="text-3xl font-extrabold text-white">0</h3>
+                    <p class="text-xs text-emerald-400 mt-2 flex items-center"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Live sync active</p>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:border-emerald-500/50 transition-all duration-300">
+                    <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-600/10 rounded-full blur-xl group-hover:bg-emerald-600/25 transition-all"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-sm font-medium text-gray-400">Good & Approved</span>
+                        <div class="p-3 bg-emerald-500/10 rounded-xl text-emerald-400"><i class="fa-solid fa-circle-check text-lg"></i></div>
+                    </div>
+                    <h3 id="stat-good" class="text-3xl font-extrabold text-emerald-400">0</h3>
+                    <p class="text-xs text-emerald-400 mt-2 flex items-center"><i class="fa-solid fa-check mr-1"></i> Ready for payout</p>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:border-amber-500/50 transition-all duration-300">
+                    <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-amber-600/10 rounded-full blur-xl group-hover:bg-amber-600/25 transition-all"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-sm font-medium text-gray-400">Pending Review</span>
+                        <div class="p-3 bg-amber-500/10 rounded-xl text-amber-400"><i class="fa-solid fa-clock-rotate-left text-lg"></i></div>
+                    </div>
+                    <h3 id="stat-pending" class="text-3xl font-extrabold text-amber-400">0</h3>
+                    <p class="text-xs text-amber-400 mt-2 flex items-center"><i class="fa-solid fa-spinner animate-spin mr-1"></i> Verification queue</p>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:border-purple-500/50 transition-all duration-300">
+                    <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-purple-600/10 rounded-full blur-xl group-hover:bg-purple-600/25 transition-all"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-sm font-medium text-gray-400">Total Earned / Payout</span>
+                        <div class="p-3 bg-purple-500/10 rounded-xl text-purple-400"><i class="fa-solid fa-wallet text-lg"></i></div>
+                    </div>
+                    <h3 id="stat-earnings" class="text-3xl font-extrabold text-purple-400">$0.00</h3>
+                    <p class="text-xs text-purple-400 mt-2 flex items-center"><i class="fa-solid fa-bolt mr-1"></i> Instant withdrawal</p>
+                </div>
+            </div>
+
+            <!-- Recent Submissions List -->
+            <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                <div class="flex flex-col md:flex-row items-center justify-between pb-6 border-b border-gray-800 gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center"><i class="fa-solid fa-list-check text-indigo-500 mr-3"></i> My Submitted Accounts</h2>
+                        <p class="text-sm text-gray-400">Track status, verification results, and rejection feedback in real-time.</p>
+                    </div>
+                    <div class="flex items-center space-x-3 w-full md:w-auto">
+                        <div class="relative flex-1 md:w-64">
+                            <i class="fa-solid fa-search absolute left-3.5 top-3.5 text-gray-500 text-sm"></i>
+                            <input type="text" id="search-submissions" oninput="renderUserSubmissions()" placeholder="Search platform or email..." class="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-gray-500">
+                        </div>
+                        <button onclick="switchTab('submit')" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm rounded-xl transition-all shadow-lg shadow-indigo-600/30 flex items-center whitespace-nowrap">
+                            <i class="fa-solid fa-plus mr-2"></i> Submit New
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto mt-6">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-xs uppercase text-gray-400 border-b border-gray-800/80 tracking-wider">
+                                <th class="py-3 px-4">Platform</th>
+                                <th class="py-3 px-4">Credentials / Info</th>
+                                <th class="py-3 px-4">Category</th>
+                                <th class="py-3 px-4">Price</th>
+                                <th class="py-3 px-4">Status</th>
+                                <th class="py-3 px-4">Feedback / Notes</th>
+                                <th class="py-3 px-4 text-right">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-submissions-tbody" class="divide-y divide-gray-800/60 text-sm">
+                            <!-- Dynamic rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="no-submissions-msg" class="hidden text-center py-12 text-gray-500">
+                    <i class="fa-solid fa-folder-open text-4xl mb-3 text-gray-600"></i>
+                    <p class="text-base font-medium">No accounts submitted yet.</p>
+                    <p class="text-xs text-gray-600 mt-1">Submit your first account to start earning!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 2: SUBMIT ACCOUNT ==================== -->
+        <section id="tab-submit" class="hidden space-y-8 animate-fadeIn max-w-3xl mx-auto">
+            <div class="glass-panel rounded-3xl p-8 shadow-2xl relative overflow-hidden border border-indigo-500/20">
+                <div class="absolute -top-24 -right-24 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl"></div>
+                <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl"></div>
+
+                <div class="text-center mb-8 relative z-10">
+                    <div class="w-16 h-16 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-2xl mx-auto flex items-center justify-center text-2xl text-white shadow-xl shadow-indigo-600/40 mb-4 animate-bounce">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <h2 class="text-2xl font-extrabold text-white">Submit New Account</h2>
+                    <p class="text-sm text-gray-400 mt-1">Fill in the correct credentials. Our system & admins verify submissions rapidly.</p>
+                </div>
+
+                <form id="account-form" onsubmit="handleAccountSubmission(event)" class="space-y-6 relative z-10">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Platform Name</label>
+                            <select id="sub-platform" required class="glass-input w-full px-4 py-3 rounded-xl text-sm text-white">
+                                <option value="" disabled selected>Select Platform</option>
+                                <option value="Gmail">Gmail / Google Account</option>
+                                <option value="Telegram">Telegram Account</option>
+                                <option value="Facebook">Facebook Account</option>
+                                <option value="Instagram">Instagram Account</option>
+                                <option value="Twitter/X">Twitter / X Account</option>
+                                <option value="TikTok">TikTok Account</option>
+                                <option value="Discord">Discord Token / Account</option>
+                                <option value="Steam">Steam Gaming Account</option>
+                                <option value="Other">Other Custom Account</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Account Category</label>
+                            <select id="sub-category" required class="glass-input w-full px-4 py-3 rounded-xl text-sm text-white">
+                                <option value="" disabled selected>Select Category</option>
+                                <option value="Fresh / Unused">Fresh / Unused (No activity)</option>
+                                <option value="Aged (1+ Year)">Aged (1+ Year Old)</option>
+                                <option value="Phone Verified (PVA)">Phone Verified (PVA)</option>
+                                <option value="Monetized / Creator">Monetized / Creator Ready</option>
+                                <option value="High Followers">High Followers / Engagement</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Account Credentials / Data (Username:Password or Token/Recovery)</label>
+                        <textarea id="sub-credentials" required rows="3" placeholder="user@gmail.com : password123 | recovery email or token..." class="glass-input w-full p-4 rounded-xl text-sm text-white font-mono placeholder-gray-600"></textarea>
+                        <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-shield-cat mr-1 text-emerald-400"></i> Encrypted client-side storage. Only admins can review upon submission.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Expected Price ($ USD)</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-3.5 text-gray-400 font-bold">$</span>
+                                <input type="number" step="0.01" min="0.10" id="sub-price" required placeholder="5.00" class="glass-input w-full pl-8 pr-4 py-3 rounded-xl text-sm text-white font-bold">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Your Contact / Telegram Username</label>
+                            <input type="text" id="sub-contact" required placeholder="@username or WhatsApp number" class="glass-input w-full px-4 py-3 rounded-xl text-sm text-white">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/40 transition-all transform active:scale-95 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Submit Account For Review</span>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 3: WITHDRAWAL ==================== -->
+        <section id="tab-withdraw" class="hidden space-y-8 animate-fadeIn max-w-3xl mx-auto">
+            <div class="glass-panel rounded-3xl p-8 shadow-2xl relative overflow-hidden border border-purple-500/20">
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-purple-500/10 rounded-2xl mx-auto flex items-center justify-center text-2xl text-purple-400 mb-4 shadow-xl">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                    <h2 class="text-2xl font-extrabold text-white">Request Payout / Withdrawal</h2>
+                    <p class="text-sm text-gray-400 mt-1">Convert your approved account earnings into real cash instantly.</p>
+                </div>
+
+                <div class="bg-indigo-950/30 border border-indigo-500/30 rounded-2xl p-6 mb-8 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase text-indigo-300 font-semibold tracking-wider">Available Balance</p>
+                        <h3 id="withdraw-available-balance" class="text-3xl font-extrabold text-white mt-1">$0.00</h3>
+                    </div>
+                    <div class="text-right">
+                        <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full border border-emerald-500/30">Instant Payouts</span>
+                    </div>
+                </div>
+
+                <form id="withdraw-form" onsubmit="handleWithdrawalRequest(event)" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Withdrawal Method</label>
+                            <select id="wd-method" required class="glass-input w-full px-4 py-3 rounded-xl text-sm text-white" onchange="updateWalletPlaceholder()">
+                                <option value="" disabled selected>Select Gateway</option>
+                                <option value="BKash">BKash (Personal)</option>
+                                <option value="Nagad">Nagad (Personal)</option>
+                                <option value="USDT (TRC20)">USDT (TRC20 Crypto)</option>
+                                <option value="TRX">TRX (Tron Network)</option>
+                                <option value="Payeer">Payeer / PerfectMoney</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Withdrawal Amount ($ USD)</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-3.5 text-gray-400 font-bold">$</span>
+                                <input type="number" step="0.01" min="1.00" id="wd-amount" required placeholder="10.00" class="glass-input w-full pl-8 pr-4 py-3 rounded-xl text-sm text-white font-bold">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label id="wallet-label" class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Wallet / Phone Number / Address</label>
+                        <input type="text" id="wd-address" required placeholder="01XXXXXXXXX or T... address" class="glass-input w-full px-4 py-3 rounded-xl text-sm text-white">
+                    </div>
+
+                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl shadow-lg shadow-purple-600/40 transition-all transform active:scale-95 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-money-bill-transfer"></i>
+                        <span>Submit Withdrawal Request</span>
+                    </button>
+                </form>
+
+                <div class="mt-8 pt-6 border-t border-gray-800">
+                    <h3 class="text-sm font-bold text-gray-300 mb-4"><i class="fa-solid fa-history mr-2 text-purple-400"></i> My Withdrawal History</h3>
+                    <div id="withdrawal-history-container" class="space-y-3">
+                        <!-- History injected here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 4: ADMIN PANEL (PROTECTED) ==================== -->
+        <section id="tab-admin" class="hidden space-y-8 animate-fadeIn">
+            <!-- Admin Security PIN Modal / Gate -->
+            <div id="admin-auth-gate" class="glass-panel p-8 rounded-3xl max-w-md mx-auto text-center shadow-2xl border border-indigo-500/30 my-12">
+                <div class="w-16 h-16 bg-indigo-600/20 text-indigo-400 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-4">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Admin Panel Security</h3>
+                <p class="text-xs text-gray-400 mb-6">Enter admin passcode to manage accounts, update status, and export excel reports. (Default PIN: <span class="text-indigo-400 font-bold">1234</span>)</p>
+                <form onsubmit="verifyAdminPin(event)" class="space-y-4">
+                    <input type="password" id="admin-pin-input" required maxlength="6" placeholder="Enter PIN (1234)" class="glass-input w-full text-center tracking-widest text-lg px-4 py-3 rounded-xl text-white">
+                    <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all">
+                        Unlock Admin Dashboard
+                    </button>
+                </form>
+            </div>
+
+            <!-- Admin Dashboard Content (Hidden until unlocked) -->
+            <div id="admin-dashboard-content" class="hidden space-y-8">
+                <!-- Admin Top Overview Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="glass-panel p-6 rounded-2xl border-l-4 border-indigo-500">
+                        <span class="text-xs font-medium text-gray-400">Total Submissions</span>
+                        <h3 id="admin-stat-total" class="text-2xl font-extrabold text-white mt-1">0</h3>
+                    </div>
+                    <div class="glass-panel p-6 rounded-2xl border-l-4 border-emerald-500">
+                        <span class="text-xs font-medium text-gray-400">Good Accounts Verified</span>
+                        <h3 id="admin-stat-good" class="text-2xl font-extrabold text-emerald-400 mt-1">0</h3>
+                    </div>
+                    <div class="glass-panel p-6 rounded-2xl border-l-4 border-rose-500">
+                        <span class="text-xs font-medium text-gray-400">Dead / Invalid Accounts</span>
+                        <h3 id="admin-stat-dead" class="text-2xl font-extrabold text-rose-400 mt-1">0</h3>
+                    </div>
+                    <div class="glass-panel p-6 rounded-2xl border-l-4 border-purple-500">
+                        <span class="text-xs font-medium text-gray-400">Total Payout Disbursed</span>
+                        <h3 id="admin-stat-payout" class="text-2xl font-extrabold text-purple-400 mt-1">$0.00</h3>
+                    </div>
+                </div>
+
+                <!-- Admin Action Controls: Export Excel & Filter -->
+                <div class="glass-panel p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center space-x-3 w-full md:w-auto">
+                        <select id="admin-filter-status" onchange="renderAdminTable()" class="glass-input px-4 py-2.5 rounded-xl text-sm text-white">
+                            <option value="ALL">All Statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Good / Approved">Good / Approved</option>
+                            <option value="Dead / Invalid">Dead / Invalid</option>
+                            <option value="Paid">Paid</option>
+                        </select>
+                        <div class="relative flex-1 md:w-64">
+                            <i class="fa-solid fa-search absolute left-3.5 top-3.5 text-gray-500 text-sm"></i>
+                            <input type="text" id="admin-search" oninput="renderAdminTable()" placeholder="Search platform or credentials..." class="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-white">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3 w-full md:w-auto justify-end">
+                        <button onclick="exportToCSV()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center">
+                            <i class="fa-solid fa-file-excel mr-2"></i> Export Excel (.CSV)
+                        </button>
+                        <button onclick="lockAdminPanel()" class="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-xl transition-all">
+                            <i class="fa-solid fa-lock mr-2"></i> Lock
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Admin Accounts Management Table -->
+                <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                    <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-user-gear text-indigo-400 mr-2"></i> Account Submissions Management</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-xs uppercase text-gray-400 border-b border-gray-800/80 tracking-wider">
+                                    <th class="py-3 px-3">ID & Date</th>
+                                    <th class="py-3 px-3">Platform / Category</th>
+                                    <th class="py-3 px-3">Credentials</th>
+                                    <th class="py-3 px-3">Price</th>
+                                    <th class="py-3 px-3">Contact</th>
+                                    <th class="py-3 px-3">Status Control</th>
+                                    <th class="py-3 px-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-submissions-tbody" class="divide-y divide-gray-800/60 text-sm">
+                                <!-- Admin Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Admin Withdrawal Requests Management -->
+                <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                    <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-money-check-dollar text-purple-400 mr-2"></i> Pending Withdrawal Requests</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-xs uppercase text-gray-400 border-b border-gray-800/80 tracking-wider">
+                                    <th class="py-3 px-3">Date</th>
+                                    <th class="py-3 px-3">Method</th>
+                                    <th class="py-3 px-3">Wallet / Address</th>
+                                    <th class="py-3 px-3">Amount</th>
+                                    <th class="py-3 px-3">Status</th>
+                                    <th class="py-3 px-3 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-withdrawals-tbody" class="divide-y divide-gray-800/60 text-sm">
+                                <!-- Withdrawal rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass-panel border-t border-gray-800 py-6 mt-12 text-center text-xs text-gray-500">
+        <p>&copy; 2026 AccountMarket Pro. Secure Account B2B Trading & Submission Gateway. All rights reserved.</p>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // LocalStorage State Initialization
+        let state = {
+            submissions: JSON.parse(localStorage.getItem('amp_submissions')) || [
+                { id: 'ACC-101', platform: 'Gmail', category: 'Fresh / Unused', credentials: 'user_sample1@gmail.com : Pass12345', price: 3.50, contact: '@user_sample', status: 'Good / Approved', feedback: 'Checked & working perfectly', date: '2026-10-05 14:22' },
+                { id: 'ACC-102', platform: 'Telegram', category: 'Phone Verified (PVA)', credentials: '+8801700000000 : secpass99', price: 5.00, contact: '@telegram_pro', status: 'Pending', feedback: 'Under review by moderation', date: '2026-10-05 16:10' }
+            ],
+            withdrawals: JSON.parse(localStorage.getItem('amp_withdrawals')) || [
+                { id: 'WD-501', method: 'BKash', address: '01711223344', amount: 10.00, status: 'Paid', date: '2026-10-04 18:30' }
+            ],
+            isAdminUnlocked: false
+        };
+
+        function saveState() {
+            localStorage.setItem('amp_submissions', JSON.stringify(state.submissions));
+            localStorage.setItem('amp_withdrawals', JSON.stringify(state.withdrawals));
+        }
+
+        // Tab Navigation Switcher
+        function switchTab(tabId) {
+            ['dashboard', 'submit', 'withdraw', 'admin'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                const navBtn = document.getElementById(`nav-${t}`);
+                if (navBtn) {
+                    navBtn.className = "px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 text-gray-300 hover:bg-gray-800 hover:text-white";
+                }
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.className = "px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 bg-indigo-600 text-white shadow-lg shadow-indigo-600/30";
+            }
+
+            if(tabId === 'dashboard') {
+                renderUserSubmissions();
+                updateDashboardStats();
+            } else if(tabId === 'withdraw') {
+                updateAvailableBalance();
+                renderWithdrawalHistory();
+            } else if(tabId === 'admin') {
+                if(state.isAdminUnlocked) {
+                    document.getElementById('admin-auth-gate').classList.add('hidden');
+                    document.getElementById('admin-dashboard-content').classList.remove('hidden');
+                    renderAdminTable();
+                    renderAdminWithdrawals();
+                    updateAdminStats();
+                }
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleAdminPanel() {
+            switchTab('admin');
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgCol = type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-rose-600' : 'bg-indigo-600';
+            const icon = type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-triangle-exclamation' : 'fa-circle-info';
+            
+            toast.className = `${bgCol} text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transform translate-y-5 opacity-0 transition-all duration-300 pointer-events-auto text-sm font-medium`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-lg"></i><span>${message}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('translate-y-5', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-5', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Dashboard Stats Update
+        function updateDashboardStats() {
+            const total = state.submissions.length;
+            const good = state.submissions.filter(s => s.status === 'Good / Approved' || s.status === 'Paid').length;
+            const pending = state.submissions.filter(s => s.status === 'Pending').length;
+            
+            // Calculate earnings from Good/Paid accounts
+            const earnings = state.submissions
+                .filter(s => s.status === 'Good / Approved' || s.status === 'Paid')
+                .reduce((acc, curr) => acc + parseFloat(curr.price), 0);
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-good').innerText = good;
+            document.getElementById('stat-pending').innerText = pending;
+            document.getElementById('stat-earnings').innerText = `$${earnings.toFixed(2)}`;
+        }
+
+        // Render User Submissions Table
+        function renderUserSubmissions() {
+            updateDashboardStats();
+            const tbody = document.getElementById('user-submissions-tbody');
+            const noMsg = document.getElementById('no-submissions-msg');
+            const query = document.getElementById('search-submissions').value.toLowerCase();
+            
+            const filtered = state.submissions.filter(s => 
+                s.platform.toLowerCase().includes(query) || s.credentials.toLowerCase().includes(query)
+            );
+
+            tbody.innerHTML = '';
+            if(filtered.length === 0) {
+                noMsg.classList.remove('hidden');
+                return;
+            }
+            noMsg.classList.add('hidden');
+
+            filtered.forEach(sub => {
+                let badgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+                if(sub.status === 'Good / Approved') badgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+                else if(sub.status === 'Dead / Invalid') badgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+                else if(sub.status === 'Paid') badgeClass = 'bg-purple-500/10 text-purple-400 border-purple-500/30';
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-800/40 transition-colors border-b border-gray-800/40';
+                tr.innerHTML = `
+                    <td class="py-4 px-4 font-semibold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-globe text-indigo-400"></i>
+                        <span>${sub.platform}</span>
+                    </td>
+                    <td class="py-4 px-4 font-mono text-xs text-gray-300 max-w-xs truncate">${sub.credentials}</td>
+                    <td class="py-4 px-4 text-xs text-gray-400">${sub.category}</td>
+                    <td class="py-4 px-4 font-bold text-emerald-400">$${parseFloat(sub.price).toFixed(2)}</td>
+                    <td class="py-4 px-4"><span class="px-3 py-1 rounded-full text-xs font-semibold border ${badgeClass}">${sub.status}</span></td>
+                    <td class="py-4 px-4 text-xs text-gray-400">${sub.feedback || 'N/A'}</td>
+                    <td class="py-4 px-4 text-right text-xs text-gray-500">${sub.date}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Handle Account Submission
+        function handleAccountSubmission(e) {
+            e.preventDefault();
+            const platform = document.getElementById('sub-platform').value;
+            const category = document.getElementById('sub-category').value;
+            const credentials = document.getElementById('sub-credentials').value;
+            const price = parseFloat(document.getElementById('sub-price').value);
+            const contact = document.getElementById('sub-contact').value;
+
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+            const newSub = {
+                id: 'ACC-' + Math.floor(1000 + Math.random() * 9000),
+                platform,
+                category,
+                credentials,
+                price,
+                contact,
+                status: 'Pending',
+                feedback: 'Awaiting admin verification',
+                date: dateStr
+            };
+
+            state.submissions.unshift(newSub);
+            saveState();
+            showToast('Account submitted successfully! Added to verification queue.', 'success');
+            document.getElementById('account-form').reset();
+            switchTab('dashboard');
+        }
+
+        // Withdrawal calculations & handling
+        function updateAvailableBalance() {
+            // Earned minus withdrawn
+            const totalEarned = state.submissions
+                .filter(s => s.status === 'Good / Approved' || s.status === 'Paid')
+                .reduce((acc, curr) => acc + parseFloat(curr.price), 0);
+            
+            const totalWithdrawn = state.withdrawals
+                .filter(w => w.status === 'Paid')
+                .reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
+
+            const available = Math.max(0, totalEarned - totalWithdrawn);
+            document.getElementById('withdraw-available-balance').innerText = `$${available.toFixed(2)}`;
+        }
+
+        function updateWalletPlaceholder() {
+            const method = document.getElementById('wd-method').value;
+            const label = document.getElementById('wallet-label');
+            const input = document.getElementById('wd-address');
+            if(method === 'BKash' || method === 'Nagad') {
+                label.innerText = `${method} Personal Phone Number`;
+                input.placeholder = '017XXXXXXXX';
+            } else if(method.includes('USDT') || method === 'TRX') {
+                label.innerText = `${method} Wallet Address (TRC20)`;
+                input.placeholder = 'T... (Tron network address)';
+            } else {
+                label.innerText = 'Account ID / Wallet Details';
+                input.placeholder = 'Enter account ID or email';
+            }
+        }
+
+        function handleWithdrawalRequest(e) {
+            e.preventDefault();
+            const method = document.getElementById('wd-method').value;
+            const amount = parseFloat(document.getElementById('wd-amount').value);
+            const address = document.getElementById('wd-address').value;
+
+            const totalEarned = state.submissions
+                .filter(s => s.status === 'Good / Approved' || s.status === 'Paid')
+                .reduce((acc, curr) => acc + parseFloat(curr.price), 0);
+            const totalWithdrawn = state.withdrawals
+                .filter(w => w.status === 'Paid')
+                .reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
+            const available = Math.max(0, totalEarned - totalWithdrawn);
+
+            if(amount > available) {
+                showToast('Withdrawal amount exceeds your available balance!', 'error');
+                return;
+            }
+
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+            const newWd = {
+                id: 'WD-' + Math.floor(1000 + Math.random() * 9000),
+                method,
+                address,
+                amount,
+                status: 'Pending',
+                date: dateStr
+            };
+
+            state.withdrawals.unshift(newWd);
+            saveState();
+            showToast('Withdrawal request submitted successfully!', 'success');
+            document.getElementById('withdraw-form').reset();
+            updateAvailableBalance();
+            renderWithdrawalHistory();
+        }
+
+        function renderWithdrawalHistory() {
+            const container = document.getElementById('withdrawal-history-container');
+            container.innerHTML = '';
+            if(state.withdrawals.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-500">No withdrawal history found.</p>';
+                return;
+            }
+
+            state.withdrawals.forEach(wd => {
+                let badge = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+                if(wd.status === 'Paid') badge = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+                else if(wd.status === 'Rejected') badge = 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+
+                const div = document.createElement('div');
+                div.className = 'glass-panel p-4 rounded-xl flex items-center justify-between text-sm';
+                div.innerHTML = `
+                    <div>
+                        <p class="font-bold text-white">${wd.method} - <span class="text-emerald-400">$${wd.amount.toFixed(2)}</span></p>
+                        <p class="text-xs text-gray-400">To: ${wd.address} • <span class="text-gray-500">${wd.date}</span></p>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold border ${badge}">${wd.status}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Admin Security & Management
+        function verifyAdminPin(e) {
+            e.preventDefault();
+            const pin = document.getElementById('admin-pin-input').value;
+            if(pin === '1234') {
+                state.isAdminUnlocked = true;
+                document.getElementById('admin-auth-gate').classList.add('hidden');
+                document.getElementById('admin-dashboard-content').classList.remove('hidden');
+                document.getElementById('admin-btn-text').innerText = 'Admin Dashboard (Active)';
+                showToast('Admin access granted successfully!', 'success');
+                renderAdminTable();
+                renderAdminWithdrawals();
+                updateAdminStats();
+            } else {
+                showToast('Invalid Admin PIN! Default is 1234', 'error');
+            }
+        }
+
+        function lockAdminPanel() {
+            state.isAdminUnlocked = false;
+            document.getElementById('admin-auth-gate').classList.remove('hidden');
+            document.getElementById('admin-dashboard-content').classList.add('hidden');
+            document.getElementById('admin-btn-text').innerText = 'Admin Panel';
+            document.getElementById('admin-pin-input').value = '';
+            showToast('Admin panel locked securely.', 'info');
+        }
+
+        function updateAdminStats() {
+            const total = state.submissions.length;
+            const good = state.submissions.filter(s => s.status === 'Good / Approved' || s.status === 'Paid').length;
+            const dead = state.submissions.filter(s => s.status === 'Dead / Invalid').length;
+            const payout = state.withdrawals
+                .filter(w => w.status === 'Paid')
+                .reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
+
+            document.getElementById('admin-stat-total').innerText = total;
+            document.getElementById('admin-stat-good').innerText = good;
+            document.getElementById('admin-stat-dead').innerText = dead;
+            document.getElementById('admin-stat-payout').innerText = `$${payout.toFixed(2)}`;
+        }
+
+        function renderAdminTable() {
+            updateAdminStats();
+            const tbody = document.getElementById('admin-submissions-tbody');
+            const filter = document.getElementById('admin-filter-status').value;
+            const query = document.getElementById('admin-search').value.toLowerCase();
+
+            const filtered = state.submissions.filter(s => {
+                const matchStatus = (filter === 'ALL' || s.status === filter);
+                const matchQuery = s.platform.toLowerCase().includes(query) || s.credentials.toLowerCase().includes(query) || s.contact.toLowerCase().includes(query);
+                return matchStatus && matchQuery;
+            });
+
+            tbody.innerHTML = '';
+            filtered.forEach(sub => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-800/40 transition-colors border-b border-gray-800/40';
+                tr.innerHTML = `
+                    <td class="py-3 px-3 text-xs">
+                        <span class="font-bold text-white">${sub.id}</span>
+                        <div class="text-gray-500">${sub.date}</div>
+                    </td>
+                    <td class="py-3 px-3">
+                        <div class="font-semibold text-white">${sub.platform}</div>
+                        <div class="text-xs text-gray-400">${sub.category}</div>
+                    </td>
+                    <td class="py-3 px-3 font-mono text-xs text-gray-300 max-w-xs truncate">${sub.credentials}</td>
+                    <td class="py-3 px-3">
+                        <input type="number" step="0.01" value="${sub.price}" onchange="updateSubPrice('${sub.id}', this.value)" class="glass-input w-20 px-2 py-1 rounded text-emerald-400 font-bold text-xs">
+                    </td>
+                    <td class="py-3 px-3 text-xs text-indigo-300">${sub.contact}</td>
+                    <td class="py-3 px-3">
+                        <select onchange="updateSubStatus('${sub.id}', this.value)" class="glass-input px-2 py-1 rounded text-xs text-white">
+                            <option value="Pending" ${sub.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Good / Approved" ${sub.status === 'Good / Approved' ? 'selected' : ''}>Good / Approved</option>
+                            <option value="Dead / Invalid" ${sub.status === 'Dead / Invalid' ? 'selected' : ''}>Dead / Invalid</option>
+                            <option value="Paid" ${sub.status === 'Paid' ? 'selected' : ''}>Paid</option>
+                        </select>
+                    </td>
+                    <td class="py-3 px-3 text-right space-x-1 whitespace-nowrap">
+                        <button onclick="promptFeedback('${sub.id}')" title="Edit Feedback" class="p-1.5 bg-gray-800 hover:bg-gray-700 text-indigo-400 rounded-lg text-xs"><i class="fa-solid fa-comment-dots"></i></button>
+                        <button onclick="deleteSubmission('${sub.id}')" title="Delete" class="p-1.5 bg-rose-950/40 hover:bg-rose-900 text-rose-400 rounded-lg text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateSubStatus(id, newStatus) {
+            const sub = state.submissions.find(s => s.id === id);
+            if(sub) {
+                sub.status = newStatus;
+                saveState();
+                showToast(`Submission ${id} updated to ${newStatus}`, 'success');
+                renderAdminTable();
+                updateDashboardStats();
+            }
+        }
+
+        function updateSubPrice(id, newPrice) {
+            const sub = state.submissions.find(s => s.id === id);
+            if(sub) {
+                sub.price = parseFloat(newPrice);
+                saveState();
+                showToast(`Price updated for ${id}`, 'success');
+                renderAdminTable();
+            }
+        }
+
+        function promptFeedback(id) {
+            const sub = state.submissions.find(s => s.id === id);
+            if(sub) {
+                const feedback = prompt("Enter feedback / reason (e.g. Password incorrect, or Working great):", sub.feedback || '');
+                if(feedback !== null) {
+                    sub.feedback = feedback;
+                    saveState();
+                    showToast('Feedback updated successfully!', 'success');
+                    renderAdminTable();
+                }
+            }
+        }
+
+        function deleteSubmission(id) {
+            if(confirm("Are you sure you want to delete this submission?")) {
+                state.submissions = state.submissions.filter(s => s.id !== id);
+                saveState();
+                showToast('Submission deleted.', 'info');
+                renderAdminTable();
+            }
+        }
+
+        function renderAdminWithdrawals() {
+            const tbody = document.getElementById('admin-withdrawals-tbody');
+            tbody.innerHTML = '';
+            if(state.withdrawals.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500 text-xs">No withdrawal requests found.</td></tr>';
+                return;
+            }
+
+            state.withdrawals.forEach(wd => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-800/40 transition-colors border-b border-gray-800/40';
+                tr.innerHTML = `
+                    <td class="py-3 px-3 text-xs text-gray-400">${wd.date}</td>
+                    <td class="py-3 px-3 font-semibold text-white">${wd.method}</td>
+                    <td class="py-3 px-3 font-mono text-xs text-indigo-300">${wd.address}</td>
+                    <td class="py-3 px-3 font-bold text-emerald-400">$${wd.amount.toFixed(2)}</td>
+                    <td class="py-3 px-3">
+                        <select onchange="updateWithdrawalStatus('${wd.id}', this.value)" class="glass-input px-2 py-1 rounded text-xs text-white">
+                            <option value="Pending" ${wd.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Paid" ${wd.status === 'Paid' ? 'selected' : ''}>Paid</option>
+                            <option value="Rejected" ${wd.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+                        </select>
+                    </td>
+                    <td class="py-3 px-3 text-right">
+                        <button onclick="deleteWithdrawal('${wd.id}')" class="p-1.5 bg-rose-950/40 hover:bg-rose-900 text-rose-400 rounded-lg text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateWithdrawalStatus(id, newStatus) {
+            const wd = state.withdrawals.find(w => w.id === id);
+            if(wd) {
+                wd.status = newStatus;
+                saveState();
+                showToast(`Withdrawal ${id} status set to ${newStatus}`, 'success');
+                renderAdminWithdrawals();
+            }
+        }
+
+        function deleteWithdrawal(id) {
+            state.withdrawals = state.withdrawals.filter(w => w.id !== id);
+            saveState();
+            showToast('Withdrawal record removed', 'info');
+            renderAdminWithdrawals();
+        }
+
+        // Export Excel (.CSV format download)
+        function exportToCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "ID,Platform,Category,Credentials,Price,Contact,Status,Feedback,Date\n";
+
+            state.submissions.forEach(s => {
+                const row = [s.id, s.platform, `"${s.category}"`, `"${s.credentials}"`, s.price, s.contact, `"${s.status}"`, `"${s.feedback || ''}"`, `"${s.date}"`];
+                csvContent += row.join(",") + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `account_submissions_report_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Excel/CSV report exported successfully!', 'success');
+        }
+
+        // Initialize App on load
+        window.onload = function() {
+            renderUserSubmissions();
+            updateDashboardStats();
+        };
+    </script>
+</body>
+</html>
+```
